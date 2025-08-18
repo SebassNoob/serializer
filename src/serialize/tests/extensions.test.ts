@@ -257,7 +257,7 @@ describe("Extensions System", () => {
 			expect(deserialized.id).toBe(complexObj.id);
 			expect(deserialized.children).toHaveLength(1);
 			expect(deserialized.parent).toBeDefined();
-			expect(deserialized.parent?.id).toBe(complexObj.parent?.id);
+			expect(deserialized.parent?.id).toBe(complexObj.parent!.id);
 		});
 
 		test("should handle extension serialization errors gracefully", () => {

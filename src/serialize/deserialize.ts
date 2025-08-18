@@ -4,7 +4,7 @@ import { _validateExtensions } from "./utils";
 
 export function deserialize<T extends readonly SerializationExtension<any>[]>(
 	formData: FormData,
-	extensions: T = [] as any,
+	extensions: T = [] as unknown as T,
 ): Serializable<ExtractExtensionTypes<T>> {
 	_validateExtensions(extensions);
 
@@ -13,7 +13,7 @@ export function deserialize<T extends readonly SerializationExtension<any>[]>(
 		throw new Error("No data found in FormData");
 	}
 
-	let parsedData: any;
+	let parsedData: unknown;
 	try {
 		parsedData = JSON.parse(dataString);
 	} catch (error) {
@@ -24,7 +24,7 @@ export function deserialize<T extends readonly SerializationExtension<any>[]>(
 
 	// Create a map of file holes and extension data for quick lookup
 	const fileHoles: Record<string, Blob> = {};
-	const extensionData: Record<string, any> = {};
+	const extensionData: Record<string, unknown> = {};
 
 	// Regexes for parsing keys - these match the patterns used by FILE_HOLE_KEY and EXTENSION_KEY
 
@@ -60,43 +60,56 @@ export function deserialize<T extends readonly SerializationExtension<any>[]>(
 		}
 	}
 	// Recursive function to replace file holes and handle extensions
-	function recursiveReplaceFile(data: any): any {
+	function recursiveReplaceFile(data: unknown): unknown {
 		// Handle file hole references
 		if (typeof data === "string" && data.match(REF_KEY_REGEX)) {
 			const refMatch = data.match(REF_KEY_REGEX);
-			if (refMatch) {
-				const [, id] = refMatch;
-				const key = FILE_HOLE_KEY(id!);
-				if (key in fileHoles) {
-					const blob = fileHoles[key];
-					// Ensure the blob exists :)
-					if (!blob) {
-						throw new Error(`File hole contains invalid data for key: ${key}`);
-					}
-					return blob;
-				}
+			if (!refMatch) {
+				throw new Error(`Malformed file hole key: ${data}`);
+			}
+
+			const [, id] = refMatch;
+			const key = FILE_HOLE_KEY(id ?? "");
+			
+			if (!(key in fileHoles)) {
 				throw new Error(`File hole not found for key: ${key}`);
 			}
-			throw new Error(`Malformed file hole key: ${data}`);
+
+			const blob = fileHoles[key];
+			// Ensure the blob exists :)
+			if (!blob) {
+				throw new Error(`File hole contains invalid data for key: ${key}`);
+			}
+			
+			return blob;
 		}
 
 		// Handle extension references
 		if (typeof data === "string" && data.match(EXT_KEY_REGEX)) {
 			const extMatch = data.match(EXT_KEY_REGEX);
-			if (extMatch) {
-				const [, name, id] = extMatch;
-				const key = EXTENSION_KEY(name!, id!);
-				if (key in extensionData) {
-					// Find the extension by name
-					const extension = extensions.find((ext) => ext.name === name);
-					if (extension) {
-						return extension.deserialize(extensionData[key]);
-					}
-					throw new Error(`Extension '${name}' not found in provided extensions`);
-				}
+			if (!extMatch) {
+				throw new Error(`Malformed extension key: ${data}`);
+			}
+
+			const [, name, id] = extMatch;
+			const key = EXTENSION_KEY(name ?? "", id ?? "");
+			
+			if (!(key in extensionData)) {
 				throw new Error(`Extension data not found for key: ${key}`);
 			}
-			throw new Error(`Malformed extension key: ${data}`);
+
+			// Find the extension by name
+			const extension = extensions.find((ext) => ext.name === name);
+			if (!extension) {
+				throw new Error(`Extension '${name}' not found in provided extensions`);
+			}
+
+			const extData = extensionData[key];
+			if (!(typeof extData === "string" || extData instanceof Blob)) {
+				throw new Error(`Extension data is not string or Blob for key: ${key}`);
+			}
+
+			return extension.deserialize(extData);
 		}
 
 		// Handle arrays recursively
@@ -107,9 +120,9 @@ export function deserialize<T extends readonly SerializationExtension<any>[]>(
 		// Handle objects and null
 		if (data === null) return null;
 		if (typeof data === "object") {
-			const result: { [key: string]: any } = {};
+			const result: { [key: string]: unknown } = {};
 			for (const key in data) {
-				result[key] = recursiveReplaceFile(data[key]);
+				result[key] = recursiveReplaceFile((data as Record<string, unknown>)[key]);
 			}
 			return result;
 		}

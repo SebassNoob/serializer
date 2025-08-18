@@ -5,7 +5,7 @@ import { _validateExtensions } from "./utils";
 
 export function serialize<T extends readonly SerializationExtension<any>[]>(
 	obj: Serializable<ExtractExtensionTypes<T>>,
-	extensions: T = [] as any,
+	extensions: T = [] as unknown as T,
 ): FormData {
 	// Handle edge case: undefined object
 	if (obj === undefined) {
@@ -16,7 +16,7 @@ export function serialize<T extends readonly SerializationExtension<any>[]>(
 	const formData = new FormData();
 
 	const holes: Record<string, Blob> = {};
-	const extensionData: Record<string, any> = {};
+	const extensionData: Record<string, unknown> = {};
 
 	// yippee side effects
 	function replaceFileWithHole(file: Blob) {
