@@ -1,8 +1,8 @@
-import { describe, test, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, test } from "bun:test";
 import { faker } from "@faker-js/faker";
+import { bigIntExtension, dateExtension } from "../../extensions/extensions";
+import { DATA_KEY, EXTENSION_KEY, FILE_HOLE_KEY } from "../constants";
 import { serialize } from "../serialize";
-import { DATA_KEY, FILE_HOLE_KEY, EXTENSION_KEY } from "../constants";
-import { dateExtension, bigIntExtension } from "../../extensions/extensions";
 import type { SerializationExtension } from "../types";
 
 describe("serialize", () => {
@@ -295,7 +295,7 @@ describe("serialize", () => {
 			const altDateExtension: SerializationExtension<Date> = {
 				name: "alt-date",
 				serialize: (value) => value.getTime().toString(),
-				deserialize: (value) => new Date(parseInt(value as string)),
+				deserialize: (value) => new Date(Number.parseInt(value as string)),
 				canHandle: (value): value is Date => value instanceof Date,
 			};
 

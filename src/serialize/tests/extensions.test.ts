@@ -1,30 +1,30 @@
-import { describe, test, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, test } from "bun:test";
 import { faker } from "@faker-js/faker";
-import { serialize } from "../serialize";
 import { deserialize } from "../deserialize";
+import { serialize } from "../serialize";
 import type { MockComplexType } from "./mocks";
 import {
-	mockDateExtension,
-	mockBigIntExtension,
-	mockSetExtension,
-	mockMapExtension,
-	mockRegExpExtension,
-	mockUrlExtension,
-	mockSymbolExtension,
-	mockErrorExtension,
-	mockImageDataExtension,
-	mockArrayBufferExtension,
-	mockBinaryDataExtension,
 	MockPerson,
-	mockPersonExtension,
-	mockEmptyExtension,
-	mockNullableExtension,
+	mockArrayBufferExtension,
+	mockBigIntExtension,
+	mockBinaryDataExtension,
 	mockComplexExtension,
+	mockDateExtension,
+	mockDuplicateExtensions,
+	mockEmptyExtension,
+	mockErrorExtension,
 	mockErrorProneExtension,
 	mockFirstDateExtension,
-	mockSecondDateExtension,
+	mockImageDataExtension,
 	mockInvalidExtensions,
-	mockDuplicateExtensions,
+	mockMapExtension,
+	mockNullableExtension,
+	mockPersonExtension,
+	mockRegExpExtension,
+	mockSecondDateExtension,
+	mockSetExtension,
+	mockSymbolExtension,
+	mockUrlExtension,
 } from "./mocks";
 
 describe("Extensions System", () => {

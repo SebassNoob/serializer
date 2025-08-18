@@ -7,9 +7,9 @@ export const dateExtension: SerializationExtension<Date> = {
 	canHandle: (value: unknown): value is Date => value instanceof Date,
 };
 
-export const bigIntExtension: SerializationExtension<BigInt> = {
+export const bigIntExtension: SerializationExtension<bigint> = {
 	name: "bigint",
-	serialize: (value: BigInt) => value.toString(),
+	serialize: (value: bigint) => value.toString(),
 	deserialize: (value) => BigInt(value as string),
-	canHandle: (value: unknown): value is BigInt => typeof value === "bigint",
+	canHandle: (value: unknown): value is bigint => typeof value === "bigint",
 };

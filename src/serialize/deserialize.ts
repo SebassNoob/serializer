@@ -1,5 +1,5 @@
+import { DATA_KEY, EXT_KEY_REGEX, EXTENSION_KEY, FILE_HOLE_KEY, REF_KEY_REGEX } from "./constants";
 import type { ExtractExtensionTypes, Serializable, SerializationExtension } from "./types";
-import { DATA_KEY, FILE_HOLE_KEY, EXTENSION_KEY, REF_KEY_REGEX, EXT_KEY_REGEX } from "./constants";
 import { _validateExtensions } from "./utils";
 
 export function deserialize<T extends readonly SerializationExtension<any>[]>(

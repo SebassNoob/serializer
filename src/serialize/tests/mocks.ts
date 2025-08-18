@@ -9,11 +9,11 @@ export const mockDateExtension: SerializationExtension<Date> = {
 };
 
 // Mock BigInt extension for testing
-export const mockBigIntExtension: SerializationExtension<BigInt> = {
+export const mockBigIntExtension: SerializationExtension<bigint> = {
 	name: "bigint",
-	serialize: (value: BigInt) => value.toString(),
+	serialize: (value: bigint) => value.toString(),
 	deserialize: (value) => BigInt(value as string),
-	canHandle: (value: unknown): value is BigInt => typeof value === "bigint",
+	canHandle: (value: unknown): value is bigint => typeof value === "bigint",
 };
 
 // Mock Set extension
@@ -279,7 +279,7 @@ export const mockSecondDateExtension: SerializationExtension<Date> = {
 	name: "second-date",
 	serialize: (value: Date) => `SECOND:${value.getTime()}`,
 	deserialize: (value: string | Blob) =>
-		new Date(parseInt((value as string).replace("SECOND:", ""))),
+		new Date(Number.parseInt((value as string).replace("SECOND:", ""))),
 	canHandle: (value: unknown): value is Date => value instanceof Date,
 };
 

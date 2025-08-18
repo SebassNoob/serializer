@@ -1,6 +1,6 @@
-import type { ExtractExtensionTypes, Serializable, SerializationExtension } from "./types";
 import { randomUUIDv7 } from "bun";
-import { DATA_KEY, FILE_HOLE_KEY, EXTENSION_KEY } from "./constants";
+import { DATA_KEY, EXTENSION_KEY, FILE_HOLE_KEY } from "./constants";
+import type { ExtractExtensionTypes, Serializable, SerializationExtension } from "./types";
 import { _validateExtensions } from "./utils";
 
 export function serialize<T extends readonly SerializationExtension<any>[]>(
