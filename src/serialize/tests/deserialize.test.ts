@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { faker } from "@faker-js/faker";
 import { bigIntExtension, dateExtension } from "../../extensions/extensions";
-import { DATA_KEY, EXTENSION_KEY, FILE_HOLE_KEY } from "../constants";
+import { DATA_KEY } from "../constants";
 import { deserialize } from "../deserialize";
 import { serialize } from "../serialize";
 import type { SerializationExtension } from "../types";
@@ -217,7 +217,7 @@ describe("deserialize", () => {
 
 			for (let i = 0; i < result.length; i++) {
 				expect(result[i]).toBeInstanceOf(Blob);
-				const text = await result[i]!.text();
+				const text = await result[i]?.text();
 				expect(text).toBe(contents[i]!);
 			}
 		});
@@ -366,32 +366,32 @@ describe("deserialize", () => {
 			// Check primitive values
 			expect(deserialized.metadata.tags).toEqual(originalData.metadata.tags);
 			expect(deserialized.settings).toEqual(originalData.settings);
-			expect(deserialized.users[0]!.name).toBe(originalData.users[0]!.name);
-			expect(deserialized.users[1]!.name).toBe(originalData.users[1]!.name);
+			expect(deserialized.users[0]?.name).toBe(originalData.users[0]!.name);
+			expect(deserialized.users[1]?.name).toBe(originalData.users[1]!.name);
 
 			// Check extensions
 			expect(deserialized.metadata.created).toBeInstanceOf(Date);
 			expect(deserialized.metadata.created.getTime()).toBe(originalData.metadata.created.getTime());
 			expect(typeof deserialized.metadata.id).toBe("bigint");
 			expect(deserialized.metadata.id).toBe(originalData.metadata.id);
-			expect(deserialized.users[0]!.joinDate).toBeInstanceOf(Date);
-			expect(deserialized.users[1]!.joinDate).toBeInstanceOf(Date);
+			expect(deserialized.users[0]?.joinDate).toBeInstanceOf(Date);
+			expect(deserialized.users[1]?.joinDate).toBeInstanceOf(Date);
 
 			// Check blobs
 			expect(deserialized.metadata.files).toHaveLength(2);
 			expect(deserialized.metadata.files[0]).toBeInstanceOf(Blob);
 			expect(deserialized.metadata.files[1]).toBeInstanceOf(Blob);
 
-			const file1Text = await deserialized.metadata.files[0]!.text();
-			const file2Text = await deserialized.metadata.files[1]!.text();
+			const file1Text = await deserialized.metadata.files[0]?.text();
+			const file2Text = await deserialized.metadata.files[1]?.text();
 			expect(file1Text).toBe(content1);
 			expect(file2Text).toBe(content2);
 
 			// Check File objects
-			expect(deserialized.users[0]!.avatar).toBeInstanceOf(File);
-			expect(deserialized.users[1]!.avatar).toBeInstanceOf(File);
-			expect((deserialized.users[0]!.avatar as File).name).toBe("avatar1.jpg");
-			expect((deserialized.users[1]!.avatar as File).name).toBe("avatar2.png");
+			expect(deserialized.users[0]?.avatar).toBeInstanceOf(File);
+			expect(deserialized.users[1]?.avatar).toBeInstanceOf(File);
+			expect((deserialized.users[0]?.avatar as File).name).toBe("avatar1.jpg");
+			expect((deserialized.users[1]?.avatar as File).name).toBe("avatar2.png");
 		});
 	});
 
@@ -485,7 +485,7 @@ describe("deserialize", () => {
 				return originalGet(key);
 			};
 
-			const originalEntries = formData.entries.bind(formData);
+			const _originalEntries = formData.entries.bind(formData);
 			formData.entries = function* () {
 				yield [DATA_KEY, JSON.stringify("$ref:test-id")];
 				yield ["$ref:test-id", null as any];

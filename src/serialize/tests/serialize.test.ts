@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { faker } from "@faker-js/faker";
 import { bigIntExtension, dateExtension } from "../../extensions/extensions";
-import { DATA_KEY, EXTENSION_KEY, FILE_HOLE_KEY } from "../constants";
+import { DATA_KEY } from "../constants";
 import { serialize } from "../serialize";
 import type { SerializationExtension } from "../types";
 
@@ -159,7 +159,7 @@ describe("serialize", () => {
 			const entries = Array.from(result.entries());
 			const blobEntry = entries.find(([key]) => key.startsWith("$ref:"));
 			expect(blobEntry).toBeDefined();
-			expect(blobEntry![1]).toBeInstanceOf(Blob);
+			expect(blobEntry?.[1]).toBeInstanceOf(Blob);
 		});
 
 		test("should serialize object containing Blob", () => {
@@ -181,7 +181,7 @@ describe("serialize", () => {
 			// Should have the blob in form data
 			const entries = Array.from(result.entries());
 			const blobEntry = entries.find(([key]) => key.startsWith("$ref:"));
-			expect(blobEntry![1]).toBeInstanceOf(Blob);
+			expect(blobEntry?.[1]).toBeInstanceOf(Blob);
 		});
 
 		test("should serialize array containing Blobs", () => {
@@ -216,7 +216,7 @@ describe("serialize", () => {
 
 			const entries = Array.from(result.entries());
 			const fileEntry = entries.find(([key]) => key.startsWith("$ref:"));
-			expect(fileEntry![1]).toBeInstanceOf(File);
+			expect(fileEntry?.[1]).toBeInstanceOf(File);
 		});
 	});
 
@@ -232,7 +232,7 @@ describe("serialize", () => {
 			const entries = Array.from(result.entries());
 			const extEntry = entries.find(([key]) => key.startsWith("$ext:date:"));
 			expect(extEntry).toBeDefined();
-			expect(JSON.parse(extEntry![1] as string)).toBe(date.toISOString());
+			expect(JSON.parse(extEntry?.[1] as string)).toBe(date.toISOString());
 		});
 
 		test("should serialize BigInt with bigIntExtension", () => {
@@ -245,7 +245,7 @@ describe("serialize", () => {
 			const entries = Array.from(result.entries());
 			const extEntry = entries.find(([key]) => key.startsWith("$ext:bigint:"));
 			expect(extEntry).toBeDefined();
-			expect(JSON.parse(extEntry![1] as string)).toBe(bigInt.toString());
+			expect(JSON.parse(extEntry?.[1] as string)).toBe(bigInt.toString());
 		});
 
 		test("should serialize object with extension types", () => {
@@ -285,7 +285,7 @@ describe("serialize", () => {
 			// Should have the blob in form data (not as JSON string)
 			const entries = Array.from(result.entries());
 			const extEntry = entries.find(([key]) => key.startsWith("$ext:custom-blob:"));
-			expect(extEntry![1]).toBeInstanceOf(Blob);
+			expect(extEntry?.[1]).toBeInstanceOf(Blob);
 		});
 
 		test("should handle multiple extensions with priority order", () => {
@@ -295,7 +295,7 @@ describe("serialize", () => {
 			const altDateExtension: SerializationExtension<Date> = {
 				name: "alt-date",
 				serialize: (value) => value.getTime().toString(),
-				deserialize: (value) => new Date(Number.parseInt(value as string)),
+				deserialize: (value) => new Date(Number.parseInt(value as string, 10)),
 				canHandle: (value): value is Date => value instanceof Date,
 			};
 

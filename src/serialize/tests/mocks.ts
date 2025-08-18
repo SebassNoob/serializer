@@ -279,7 +279,7 @@ export const mockSecondDateExtension: SerializationExtension<Date> = {
 	name: "second-date",
 	serialize: (value: Date) => `SECOND:${value.getTime()}`,
 	deserialize: (value: string | Blob) =>
-		new Date(Number.parseInt((value as string).replace("SECOND:", ""))),
+		new Date(Number.parseInt((value as string).replace("SECOND:", ""), 10)),
 	canHandle: (value: unknown): value is Date => value instanceof Date,
 };
 

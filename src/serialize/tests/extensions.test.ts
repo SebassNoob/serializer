@@ -171,8 +171,8 @@ describe("Extensions System", () => {
 			const formDataEntries = Array.from(serialized.entries());
 			const extEntry = formDataEntries.find(([key]) => key.startsWith("$ext:"));
 
-			expect(extEntry![0]).toMatch(/^\$ext:first-date:/);
-			expect(JSON.parse(extEntry![1] as string)).toMatch(/^FIRST:/);
+			expect(extEntry?.[0]).toMatch(/^\$ext:first-date:/);
+			expect(JSON.parse(extEntry?.[1] as string)).toMatch(/^FIRST:/);
 
 			const deserialized = deserialize(serialized, [
 				mockFirstDateExtension,
@@ -257,7 +257,7 @@ describe("Extensions System", () => {
 			expect(deserialized.id).toBe(complexObj.id);
 			expect(deserialized.children).toHaveLength(1);
 			expect(deserialized.parent).toBeDefined();
-			expect(deserialized.parent!.id).toBe(complexObj.parent!.id);
+			expect(deserialized.parent?.id).toBe(complexObj.parent?.id);
 		});
 
 		test("should handle extension serialization errors gracefully", () => {
