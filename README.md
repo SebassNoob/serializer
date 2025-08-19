@@ -1,15 +1,13 @@
-# serialiser
+# form-data-serializer
 
-To install dependencies:
+Extendable JSON to FormData serializer. 
 
-```bash
-bun install
-```
+## Purpose
 
-To run:
+Data is transferred over the network in several ways; one of the most popular methods is via JSON.
 
-```bash
-bun run index.ts
-```
+However, JSON only supports serialization of a few primitives, and notably lacks good `File` and `Blob` support. This package aims to solve this issue by making everything a `FormData` object, providing native file serialization, and allowing you to customise how you want to serialize non primitive data (`Date`, `BigInt`, `ArrayBuffer`, etc...).
 
-This project was created using `bun init` in bun v1.2.20. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+## Usage
+
+todo

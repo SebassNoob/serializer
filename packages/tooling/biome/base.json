@@ -34,7 +34,13 @@
 				"noUnusedVariables": "error"
 			}
 		},
-		"includes": ["**", "!**/node_modules/**", "!**/.next/**", "!**/dist/**", "!**/*test*"]
+		"includes": [
+			"**",
+			"!**/node_modules/**",
+			"!**/.next/**",
+			"!**/dist/**",
+			"!**/*test*"
+		]
 	},
 	"formatter": {
 		"enabled": true,

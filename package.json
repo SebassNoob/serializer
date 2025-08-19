@@ -1,18 +1,28 @@
 {
-	"name": "serializer",
-	"module": "index.ts",
-	"devDependencies": {
-		"@faker-js/faker": "^9.9.0",
-		"@types/bun": "latest"
-	},
-	"peerDependencies": {
-		"typescript": "^5"
-	},
-	"private": true,
-	"type": "module",
-	"scripts": {
-		"test": "bun test --coverage",
-		"lint": "bunx biome check",
-		"format": "bunx biome format --write"
-	}
+  "name": "form-data-serializer-root",
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.0",
+    "turbo": "^2.5.5",
+    "typescript": "^5.9.2",
+    "@changesets/cli": "^2.29.5",
+    "syncpack": "^13.0.0"
+  },
+  "packageManager": "bun@1.2.20",
+  "private": true,
+  "scripts": {
+    "build": "bunx turbo build",
+    "changesets": "bunx turbo build && bunx changeset",
+    "changesets:publish": "bunx changeset publish",
+    "changesets:version": "bunx changeset version",
+    "dev": "FORCE_COLOR=1 bunx turbo dev",
+    "format": "FORCE_COLOR=1 bunx turbo format",
+    "lint": "FORCE_COLOR=1 bunx turbo lint",
+    "start": "NODE_ENV=production bunx turbo run start",
+    "syncpack": "bunx syncpack",
+    "test": "FORCE_COLOR=1 bunx turbo test"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }

@@ -124,7 +124,12 @@ describe("deserialize", () => {
 
 	describe("arrays", () => {
 		test("should deserialize array of primitives", () => {
-			const arr = [faker.lorem.word(), faker.number.int(), faker.datatype.boolean(), null];
+			const arr = [
+				faker.lorem.word(),
+				faker.number.int(),
+				faker.datatype.boolean(),
+				null,
+			];
 
 			const serialized = serialize(arr);
 			const result = deserialize(serialized);
@@ -206,8 +211,14 @@ describe("deserialize", () => {
 		});
 
 		test("should deserialize array containing Blobs", async () => {
-			const contents = [faker.lorem.paragraph(), faker.lorem.paragraph(), faker.lorem.paragraph()];
-			const blobs = contents.map((content) => new Blob([content], { type: "text/plain" }));
+			const contents = [
+				faker.lorem.paragraph(),
+				faker.lorem.paragraph(),
+				faker.lorem.paragraph(),
+			];
+			const blobs = contents.map(
+				(content) => new Blob([content], { type: "text/plain" }),
+			);
 
 			const serialized = serialize(blobs);
 			const result = deserialize(serialized) as Blob[];
@@ -269,7 +280,10 @@ describe("deserialize", () => {
 			};
 
 			const serialized = serialize(obj, [dateExtension, bigIntExtension]);
-			const result = deserialize(serialized, [dateExtension, bigIntExtension]) as typeof obj;
+			const result = deserialize(serialized, [
+				dateExtension,
+				bigIntExtension,
+			]) as typeof obj;
 
 			expect(result.name).toBe(obj.name);
 			expect(result.count).toBe(obj.count);
@@ -284,7 +298,8 @@ describe("deserialize", () => {
 			const blobExtension: SerializationExtension<typeof customData> = {
 				name: "custom-blob",
 				serialize: (value) => JSON.stringify(value), // Return string instead of Blob for this test
-				deserialize: (value) => JSON.parse(value as string) as typeof customData,
+				deserialize: (value) =>
+					JSON.parse(value as string) as typeof customData,
 				canHandle: (value): value is typeof customData =>
 					typeof value === "object" && value !== null && "special" in value,
 			};
@@ -318,7 +333,9 @@ describe("deserialize", () => {
 
 			const serialized = serialize(date, [brokenExtension]);
 
-			expect(() => deserialize(serialized, [brokenExtension])).toThrow("Deserialization failed");
+			expect(() => deserialize(serialized, [brokenExtension])).toThrow(
+				"Deserialization failed",
+			);
 		});
 	});
 
@@ -342,12 +359,16 @@ describe("deserialize", () => {
 				users: [
 					{
 						name: faker.person.fullName(),
-						avatar: new File([faker.image.avatar()], "avatar1.jpg", { type: "image/jpeg" }),
+						avatar: new File([faker.image.avatar()], "avatar1.jpg", {
+							type: "image/jpeg",
+						}),
 						joinDate: faker.date.past(),
 					},
 					{
 						name: faker.person.fullName(),
-						avatar: new File([faker.image.avatar()], "avatar2.png", { type: "image/png" }),
+						avatar: new File([faker.image.avatar()], "avatar2.png", {
+							type: "image/png",
+						}),
 						joinDate: faker.date.past(),
 					},
 				],
@@ -357,7 +378,10 @@ describe("deserialize", () => {
 				},
 			};
 
-			const serialized = serialize(originalData, [dateExtension, bigIntExtension]);
+			const serialized = serialize(originalData, [
+				dateExtension,
+				bigIntExtension,
+			]);
 			const deserialized = deserialize(serialized, [
 				dateExtension,
 				bigIntExtension,
@@ -371,7 +395,9 @@ describe("deserialize", () => {
 
 			// Check extensions
 			expect(deserialized.metadata.created).toBeInstanceOf(Date);
-			expect(deserialized.metadata.created.getTime()).toBe(originalData.metadata.created.getTime());
+			expect(deserialized.metadata.created.getTime()).toBe(
+				originalData.metadata.created.getTime(),
+			);
 			expect(typeof deserialized.metadata.id).toBe("bigint");
 			expect(deserialized.metadata.id).toBe(originalData.metadata.id);
 			expect(deserialized.users[0]?.joinDate).toBeInstanceOf(Date);
@@ -407,14 +433,18 @@ describe("deserialize", () => {
 			const formData = new FormData();
 			formData.append(DATA_KEY, "invalid json{");
 
-			expect(() => deserialize(formData)).toThrow("Failed to parse data from FormData");
+			expect(() => deserialize(formData)).toThrow(
+				"Failed to parse data from FormData",
+			);
 		});
 
 		test("should throw error when file hole is missing", () => {
 			const formData = new FormData();
 			formData.append(DATA_KEY, JSON.stringify("$ref:missing-id"));
 
-			expect(() => deserialize(formData)).toThrow("File hole not found for key: $ref:missing-id");
+			expect(() => deserialize(formData)).toThrow(
+				"File hole not found for key: $ref:missing-id",
+			);
 		});
 
 		test("should throw error when extension data is missing", () => {
@@ -469,7 +499,9 @@ describe("deserialize", () => {
 				canHandle: () => false,
 			};
 
-			expect(() => deserialize(new FormData(), [invalidExtension as any])).toThrow(
+			expect(() =>
+				deserialize(new FormData(), [invalidExtension as any]),
+			).toThrow(
 				"Extension name 'test:invalid' cannot contain colon (:) character",
 			);
 		});
@@ -536,7 +568,9 @@ describe("deserialize", () => {
 			expect(result.level1.level2.level3.level4.level5.value).toBe(
 				deepObj.level1.level2.level3.level4.level5.value,
 			);
-			expect(result.level1.level2.level3.level4.level5.blob).toBeInstanceOf(Blob);
+			expect(result.level1.level2.level3.level4.level5.blob).toBeInstanceOf(
+				Blob,
+			);
 		});
 
 		test("should handle very large arrays", () => {

@@ -1,5 +1,15 @@
-import { DATA_KEY, EXT_KEY_REGEX, EXTENSION_KEY, FILE_HOLE_KEY, REF_KEY_REGEX } from "./constants";
-import type { ExtractExtensionTypes, Serializable, SerializationExtension } from "./types";
+import {
+	DATA_KEY,
+	EXT_KEY_REGEX,
+	EXTENSION_KEY,
+	FILE_HOLE_KEY,
+	REF_KEY_REGEX,
+} from "./constants";
+import type {
+	ExtractExtensionTypes,
+	Serializable,
+	SerializationExtension,
+} from "./types";
 import { _validateExtensions } from "./utils";
 
 export function deserialize<T extends readonly SerializationExtension<any>[]>(
@@ -36,7 +46,9 @@ export function deserialize<T extends readonly SerializationExtension<any>[]>(
 		if (refMatch) {
 			// Ensure value is a Blob (has property 'size')
 			if (typeof value !== "object" || value === null || !("size" in value)) {
-				throw new Error(`Expected Blob for file hole key '${key}', but got ${typeof value}`);
+				throw new Error(
+					`Expected Blob for file hole key '${key}', but got ${typeof value}`,
+				);
 			}
 			fileHoles[key] = value as Blob;
 		} else if (extMatch) {
@@ -49,7 +61,11 @@ export function deserialize<T extends readonly SerializationExtension<any>[]>(
 						`Failed to parse extension data for key '${key}': ${error instanceof Error ? error.message : "Unknown error"}`,
 					);
 				}
-			} else if (typeof value === "object" && value !== null && "size" in value) {
+			} else if (
+				typeof value === "object" &&
+				value !== null &&
+				"size" in value
+			) {
 				// Extension returned a Blob
 				extensionData[key] = value as Blob;
 			} else {
@@ -70,7 +86,7 @@ export function deserialize<T extends readonly SerializationExtension<any>[]>(
 
 			const [, id] = refMatch;
 			const key = FILE_HOLE_KEY(id ?? "");
-			
+
 			if (!(key in fileHoles)) {
 				throw new Error(`File hole not found for key: ${key}`);
 			}
@@ -80,7 +96,7 @@ export function deserialize<T extends readonly SerializationExtension<any>[]>(
 			if (!blob) {
 				throw new Error(`File hole contains invalid data for key: ${key}`);
 			}
-			
+
 			return blob;
 		}
 
@@ -93,7 +109,7 @@ export function deserialize<T extends readonly SerializationExtension<any>[]>(
 
 			const [, name, id] = extMatch;
 			const key = EXTENSION_KEY(name ?? "", id ?? "");
-			
+
 			if (!(key in extensionData)) {
 				throw new Error(`Extension data not found for key: ${key}`);
 			}
@@ -122,7 +138,9 @@ export function deserialize<T extends readonly SerializationExtension<any>[]>(
 		if (typeof data === "object") {
 			const result: { [key: string]: unknown } = {};
 			for (const key in data) {
-				result[key] = recursiveReplaceFile((data as Record<string, unknown>)[key]);
+				result[key] = recursiveReplaceFile(
+					(data as Record<string, unknown>)[key],
+				);
 			}
 			return result;
 		}

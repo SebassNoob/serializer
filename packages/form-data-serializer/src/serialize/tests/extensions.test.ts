@@ -54,14 +54,22 @@ describe("Extensions System", () => {
 		});
 
 		test("should handle custom Set extension", () => {
-			const originalSet = new Set([faker.lorem.word(), faker.lorem.word(), faker.lorem.word()]);
+			const originalSet = new Set([
+				faker.lorem.word(),
+				faker.lorem.word(),
+				faker.lorem.word(),
+			]);
 
 			const serialized = serialize(originalSet, [mockSetExtension]);
-			const deserialized = deserialize(serialized, [mockSetExtension]) as Set<string>;
+			const deserialized = deserialize(serialized, [
+				mockSetExtension,
+			]) as Set<string>;
 
 			expect(deserialized).toBeInstanceOf(Set);
 			expect(deserialized.size).toBe(originalSet.size);
-			expect([...deserialized]).toEqual(expect.arrayContaining([...originalSet]));
+			expect([...deserialized]).toEqual(
+				expect.arrayContaining([...originalSet]),
+			);
 		});
 
 		test("should handle custom Map extension", () => {
@@ -72,7 +80,10 @@ describe("Extensions System", () => {
 			]);
 
 			const serialized = serialize(originalMap, [mockMapExtension]);
-			const deserialized = deserialize(serialized, [mockMapExtension]) as Map<string, number>;
+			const deserialized = deserialize(serialized, [mockMapExtension]) as Map<
+				string,
+				number
+			>;
 
 			expect(deserialized).toBeInstanceOf(Map);
 			expect(deserialized.size).toBe(originalMap.size);
@@ -85,7 +96,9 @@ describe("Extensions System", () => {
 			const originalRegex = new RegExp(faker.lorem.word(), "gi");
 
 			const serialized = serialize(originalRegex, [mockRegExpExtension]);
-			const deserialized = deserialize(serialized, [mockRegExpExtension]) as RegExp;
+			const deserialized = deserialize(serialized, [
+				mockRegExpExtension,
+			]) as RegExp;
 
 			expect(deserialized).toBeInstanceOf(RegExp);
 			expect(deserialized.source).toBe(originalRegex.source);
@@ -167,7 +180,10 @@ describe("Extensions System", () => {
 			const date = faker.date.recent();
 
 			// First extension should win
-			const serialized = serialize(date, [mockFirstDateExtension, mockSecondDateExtension]);
+			const serialized = serialize(date, [
+				mockFirstDateExtension,
+				mockSecondDateExtension,
+			]);
 			const formDataEntries = Array.from(serialized.entries());
 			const extEntry = formDataEntries.find(([key]) => key.startsWith("$ext:"));
 
@@ -204,7 +220,9 @@ describe("Extensions System", () => {
 			]) as typeof complexObj;
 
 			expect(deserialized.timestamp).toBeInstanceOf(Date);
-			expect(deserialized.timestamp.getTime()).toBe(complexObj.timestamp.getTime());
+			expect(deserialized.timestamp.getTime()).toBe(
+				complexObj.timestamp.getTime(),
+			);
 			expect(typeof deserialized.id).toBe("bigint");
 			expect(deserialized.id).toBe(complexObj.id);
 			expect(typeof deserialized.type).toBe("symbol");
@@ -230,29 +248,39 @@ describe("Extensions System", () => {
 
 			// Test null case
 			const serializedNull = serialize(objWithNull, [mockNullableExtension]);
-			const deserializedNull = deserialize(serializedNull, [mockNullableExtension]) as {
+			const deserializedNull = deserialize(serializedNull, [
+				mockNullableExtension,
+			]) as {
 				value: null | Date;
 			};
 			expect(deserializedNull.value).toBeNull();
 
 			// Test Date case
 			const serializedDate = serialize(objWithDate, [mockNullableExtension]);
-			const deserializedDate = deserialize(serializedDate, [mockNullableExtension]) as {
+			const deserializedDate = deserialize(serializedDate, [
+				mockNullableExtension,
+			]) as {
 				value: null | Date;
 			};
 			expect(deserializedDate.value).toBeInstanceOf(Date);
-			expect((deserializedDate.value as Date).getTime()).toBe(objWithDate.value.getTime());
+			expect((deserializedDate.value as Date).getTime()).toBe(
+				objWithDate.value.getTime(),
+			);
 		});
 
 		test("should handle extension with complex nested types", () => {
 			const complexObj: MockComplexType = {
 				id: faker.string.uuid(),
-				children: [{ id: faker.string.uuid(), children: [], parent: undefined }],
+				children: [
+					{ id: faker.string.uuid(), children: [], parent: undefined },
+				],
 				parent: { id: faker.string.uuid(), children: [], parent: undefined },
 			};
 
 			const serialized = serialize(complexObj, [mockComplexExtension]);
-			const deserialized = deserialize(serialized, [mockComplexExtension]) as MockComplexType;
+			const deserialized = deserialize(serialized, [
+				mockComplexExtension,
+			]) as MockComplexType;
 
 			expect(deserialized.id).toBe(complexObj.id);
 			expect(deserialized.children).toHaveLength(1);
@@ -263,7 +291,9 @@ describe("Extensions System", () => {
 		test("should handle extension serialization errors gracefully", () => {
 			const obj = { shouldError: true as const };
 
-			expect(() => serialize(obj, [mockErrorProneExtension])).toThrow("Serialization failed");
+			expect(() => serialize(obj, [mockErrorProneExtension])).toThrow(
+				"Serialization failed",
+			);
 		});
 
 		test("should validate extension names and throw appropriate errors", () => {
@@ -285,7 +315,9 @@ describe("Extensions System", () => {
 			originalError.name = "CustomError";
 
 			const serialized = serialize(originalError, [mockErrorExtension]);
-			const deserialized = deserialize(serialized, [mockErrorExtension]) as Error;
+			const deserialized = deserialize(serialized, [
+				mockErrorExtension,
+			]) as Error;
 
 			expect(deserialized).toBeInstanceOf(Error);
 			expect(deserialized.message).toBe(originalError.message);
@@ -303,7 +335,9 @@ describe("Extensions System", () => {
 			);
 
 			const serialized = serialize(originalPerson, [mockPersonExtension]);
-			const deserialized = deserialize(serialized, [mockPersonExtension]) as MockPerson;
+			const deserialized = deserialize(serialized, [
+				mockPersonExtension,
+			]) as MockPerson;
 
 			expect(deserialized).toBeInstanceOf(MockPerson);
 			expect(deserialized.name).toBe(originalPerson.name);

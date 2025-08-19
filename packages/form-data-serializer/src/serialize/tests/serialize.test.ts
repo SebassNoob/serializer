@@ -51,7 +51,9 @@ describe("serialize", () => {
 		});
 
 		test("should throw error for undefined", () => {
-			expect(() => serialize(undefined as any)).toThrow("Cannot serialize undefined value");
+			expect(() => serialize(undefined as any)).toThrow(
+				"Cannot serialize undefined value",
+			);
 		});
 	});
 
@@ -110,7 +112,12 @@ describe("serialize", () => {
 
 	describe("arrays", () => {
 		test("should serialize array of primitives", () => {
-			const arr = [faker.lorem.word(), faker.number.int(), faker.datatype.boolean(), null];
+			const arr = [
+				faker.lorem.word(),
+				faker.number.int(),
+				faker.datatype.boolean(),
+				null,
+			];
 
 			const result = serialize(arr);
 			expect(result.get(DATA_KEY)).toBe(JSON.stringify(arr));
@@ -207,7 +214,9 @@ describe("serialize", () => {
 
 		test("should handle File objects (subclass of Blob)", () => {
 			const content = faker.lorem.paragraph();
-			const file = new File([content], faker.system.fileName(), { type: "text/plain" });
+			const file = new File([content], faker.system.fileName(), {
+				type: "text/plain",
+			});
 
 			const result = serialize(file);
 
@@ -271,7 +280,8 @@ describe("serialize", () => {
 			const customData = { special: faker.lorem.sentence() };
 			const blobExtension: SerializationExtension<typeof customData> = {
 				name: "custom-blob",
-				serialize: (value) => new Blob([JSON.stringify(value)], { type: "application/json" }),
+				serialize: (value) =>
+					new Blob([JSON.stringify(value)], { type: "application/json" }),
 				deserialize: (value) => JSON.parse(value as string),
 				canHandle: (value): value is typeof customData =>
 					typeof value === "object" && value !== null && "special" in value,
@@ -284,7 +294,9 @@ describe("serialize", () => {
 
 			// Should have the blob in form data (not as JSON string)
 			const entries = Array.from(result.entries());
-			const extEntry = entries.find(([key]) => key.startsWith("$ext:custom-blob:"));
+			const extEntry = entries.find(([key]) =>
+				key.startsWith("$ext:custom-blob:"),
+			);
 			expect(extEntry?.[1]).toBeInstanceOf(Blob);
 		});
 
@@ -405,7 +417,9 @@ describe("serialize", () => {
 			expect(dataValue.level1.level2.level3.level4.level5.value).toBe(
 				deepObj.level1.level2.level3.level4.level5.value,
 			);
-			expect(dataValue.level1.level2.level3.level4.level5.blob).toMatch(/^\$ref:/);
+			expect(dataValue.level1.level2.level3.level4.level5.blob).toMatch(
+				/^\$ref:/,
+			);
 		});
 
 		test("should handle circular reference in extensions (should not infinitely recurse)", () => {
