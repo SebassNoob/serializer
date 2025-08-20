@@ -29,4 +29,24 @@ const program = createProgram({
 
 program.emit();
 
+
 console.info("Build and type generation complete!");
+
+// Generate documentation using TypeDoc
+const typedocResult = Bun.spawnSync([
+	"bunx", 
+	"typedoc", 
+	"--entryPoints", "src/index.ts", "src/extensions/index.ts",
+	"--out", "docs",
+	"--plugin", "typedoc-plugin-markdown",
+	"--readme", "none",
+	"--excludeInternal"
+]);
+
+if (typedocResult.exitCode !== 0) {
+	const errorMsg = typedocResult.stderr ? new TextDecoder().decode(typedocResult.stderr) : "Unknown error";
+	console.error("TypeDoc generation failed:", errorMsg);
+	process.exit(1);
+}
+
+console.info("Documentation generated successfully in ./docs");

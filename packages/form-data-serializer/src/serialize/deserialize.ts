@@ -2,6 +2,85 @@ import { DATA_KEY, EXT_KEY_REGEX, EXTENSION_KEY, FILE_HOLE_KEY, REF_KEY_REGEX } 
 import type { ExtractExtensionTypes, Serializable, SerializationExtension } from "./types";
 import { _validateExtensions } from "./utils";
 
+/**
+ * Deserializes a FormData object back into a JavaScript object containing JSON primitives, Blobs, and custom extension types.
+ * 
+ * This function reverses the serialization process by:
+ * 1. Parsing the main object structure from the "$data" key
+ * 2. Replacing file reference keys ("$ref:<uuid>") with their corresponding Blob objects
+ * 3. Replacing extension reference keys ("$ext:<name>:<uuid>") with their deserialized custom types
+ * 4. Recursively reconstructing the original object structure
+ * 
+ * @typeParam T - Array type of serialization extensions
+ * @param formData - The FormData object to deserialize. Must contain:
+ *   - "$data": JSON string of the main object structure with references
+ *   - "$ref:<uuid>": Blob entries for file references
+ *   - "$ext:<extension-name>:<uuid>": Extension data (either JSON strings or Blobs)
+ * @param extensions - Array of serialization extensions that match those used during serialization.
+ *   Must include all extensions that were used to serialize extension references in the data.
+ *   Defaults to an empty array.
+ * @returns The reconstructed JavaScript object with all references
+ *   resolved back to their original types (Blobs, custom extension types, etc.)
+ * 
+ * @throws {@link Error} Throws an error if:
+ *   - No "$data" key is found in the FormData
+ *   - The "$data" value cannot be parsed as JSON
+ *   - A reference key points to missing data in the FormData
+ *   - Extension data cannot be parsed or deserialized
+ *   - A required extension is not provided in the extensions array
+ *   - FormData contains invalid data types for reference keys
+ * 
+ * @example Basic deserialization without extensions
+ * ```typescript
+ * // Given FormData from serialize() containing:
+ * // - "$data": '{"name":"John","age":30,"profile":{"avatar":"$ref:01234567-89ab-cdef-0123-456789abcdef"}}'  
+ * // - "$ref:01234567-89ab-cdef-0123-456789abcdef": [Blob object with image data]
+ * 
+ * const originalData = deserialize(formData);
+ * 
+ * // Result:
+ * // {
+ * //   name: "John",
+ * //   age: 30,
+ * //   profile: {
+ * //     avatar: Blob { size: 1024, type: "image/png" }
+ * //   }
+ * // }
+ * ```
+ * 
+ * @example With extensions for custom types (Date extension)
+ * ```typescript
+ * const dateExtension = {
+ *   name: "date",
+ *   canHandle: (value) => value instanceof Date,
+ *   serialize: (date) => date.toISOString(),
+ *   deserialize: (str) => new Date(str)
+ * };
+ * 
+ * // Given FormData from serialize() with date extension containing:
+ * // - "$data": '{"user":"Alice","timestamps":{"created":"$ext:date:abc123...","updated":"$ext:date:def456..."},"events":[{"name":"signup","date":"$ext:date:jkl012..."}]}'
+ * // - "$ext:date:abc123...": "2023-01-01T10:30:00.000Z"
+ * // - "$ext:date:def456...": "2023-12-31T15:45:30.000Z"
+ * // - "$ext:date:jkl012...": "2023-01-01T10:30:00.000Z"
+ * 
+ * const originalData = deserialize(formData, [dateExtension]);
+ * 
+ * // Result:
+ * // {
+ * //   user: "Alice", 
+ * //   timestamps: {
+ * //     created: Date("2023-01-01T10:30:00.000Z"),
+ * //     updated: Date("2023-12-31T15:45:30.000Z")
+ * //   },
+ * //   events: [
+ * //     { name: "signup", date: Date("2023-01-01T10:30:00.000Z") }
+ * //   ]
+ * // }
+ * 
+ * // Each "$ext:date:<uuid>" reference is replaced with a reconstructed Date object
+ * // using the extension's deserialize method on the stored ISO string.
+ * ```
+ */
 // biome-ignore lint/suspicious/noExplicitAny: unavoidable due to dynamic nature of extensions
 export function deserialize<T extends readonly SerializationExtension<any>[]>(
 	formData: FormData,
