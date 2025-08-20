@@ -10,7 +10,7 @@
 		"baseUrl": ".", // Ensure TypeScript resolves the paths correctly
 		"paths": {
 			"@/*": ["./src/*"], // Alias for src directory
-			"@": ["./src"],
+			"@": ["./src"]
 		}
 	},
 	"include": ["src/**/*", "_test/**/*", "build/**/*"], // Include all source files

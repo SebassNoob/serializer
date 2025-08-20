@@ -1,12 +1,9 @@
 import { randomUUIDv7 } from "bun";
 import { DATA_KEY, EXTENSION_KEY, FILE_HOLE_KEY } from "./constants";
-import type {
-	ExtractExtensionTypes,
-	Serializable,
-	SerializationExtension,
-} from "./types";
+import type { ExtractExtensionTypes, Serializable, SerializationExtension } from "./types";
 import { _validateExtensions } from "./utils";
 
+// biome-ignore lint/suspicious/noExplicitAny: unavoidable due to dynamic nature of extensions
 export function serialize<T extends readonly SerializationExtension<any>[]>(
 	obj: Serializable<ExtractExtensionTypes<T>>,
 	extensions: T = [] as unknown as T,

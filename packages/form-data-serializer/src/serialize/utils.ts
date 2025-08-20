@@ -1,16 +1,15 @@
 import type { SerializationExtension } from "./types";
 
-export function _validateExtensions<
-	T extends readonly SerializationExtension<any>[],
->(extensions: T): void {
+// biome-ignore lint/suspicious/noExplicitAny: unavoidable due to dynamic nature of extensions
+export function _validateExtensions<T extends readonly SerializationExtension<any>[]>(
+	extensions: T,
+): void {
 	const seenNames = new Set<string>();
 
 	for (const extension of extensions) {
 		// Check for colon in extension name
 		if (extension.name.includes(":")) {
-			throw new Error(
-				`Extension name '${extension.name}' cannot contain colon (:) character`,
-			);
+			throw new Error(`Extension name '${extension.name}' cannot contain colon (:) character`);
 		}
 
 		// Check for empty or whitespace-only names

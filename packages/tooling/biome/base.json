@@ -36,10 +36,7 @@
 		},
 		"includes": [
 			"**",
-			"!**/node_modules/**",
-			"!**/.next/**",
-			"!**/dist/**",
-			"!**/*test*"
+			"!**/node_modules/**"
 		]
 	},
 	"formatter": {
@@ -50,7 +47,7 @@
 		"indentWidth": 2,
 		"lineWidth": 100,
 		"lineEnding": "lf",
-		"includes": ["**", "!**/node_modules/**", "!**/.next/**"]
+		"includes": ["**", "!**/node_modules/**"]
 	},
 	"javascript": {
 		"formatter": {

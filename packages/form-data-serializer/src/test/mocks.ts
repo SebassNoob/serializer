@@ -27,18 +27,15 @@ export const mockSetExtension: SerializationExtension<Set<string>> = {
 // Mock Map extension
 export const mockMapExtension: SerializationExtension<Map<string, number>> = {
 	name: "map",
-	serialize: (value: Map<string, number>) =>
-		JSON.stringify([...value.entries()]),
+	serialize: (value: Map<string, number>) => JSON.stringify([...value.entries()]),
 	deserialize: (value: string | Blob) => new Map(JSON.parse(value as string)),
-	canHandle: (value: unknown): value is Map<string, number> =>
-		value instanceof Map,
+	canHandle: (value: unknown): value is Map<string, number> => value instanceof Map,
 };
 
 // Mock RegExp extension
 export const mockRegExpExtension: SerializationExtension<RegExp> = {
 	name: "regex",
-	serialize: (value: RegExp) =>
-		JSON.stringify({ source: value.source, flags: value.flags }),
+	serialize: (value: RegExp) => JSON.stringify({ source: value.source, flags: value.flags }),
 	deserialize: (value: string | Blob) => {
 		const { source, flags } = JSON.parse(value as string);
 		return new RegExp(source, flags);
@@ -108,9 +105,7 @@ export const mockImageDataExtension: SerializationExtension<{
 			data: new Uint8Array(parsed.data),
 		};
 	},
-	canHandle: (
-		value: unknown,
-	): value is { width: number; height: number; data: Uint8Array } =>
+	canHandle: (value: unknown): value is { width: number; height: number; data: Uint8Array } =>
 		typeof value === "object" &&
 		value !== null &&
 		"width" in value &&
@@ -128,8 +123,7 @@ export const mockArrayBufferExtension: SerializationExtension<ArrayBuffer> = {
 		}
 		throw new Error("Expected Blob for ArrayBuffer deserialization");
 	},
-	canHandle: (value: unknown): value is ArrayBuffer =>
-		value instanceof ArrayBuffer,
+	canHandle: (value: unknown): value is ArrayBuffer => value instanceof ArrayBuffer,
 };
 
 export const mockBinaryDataExtension: SerializationExtension<{
@@ -197,8 +191,7 @@ export const mockPersonExtension: SerializationExtension<MockPerson> = {
 		const parsed = JSON.parse(value as string);
 		return new MockPerson(parsed.name, parsed.age, parsed.email);
 	},
-	canHandle: (value: unknown): value is MockPerson =>
-		value instanceof MockPerson,
+	canHandle: (value: unknown): value is MockPerson => value instanceof MockPerson,
 };
 
 // Helper extensions for various test scenarios
@@ -207,10 +200,7 @@ export const mockEmptyExtension: SerializationExtension<{ isEmpty: true }> = {
 	serialize: () => "",
 	deserialize: () => ({ isEmpty: true }),
 	canHandle: (value: unknown): value is { isEmpty: true } =>
-		typeof value === "object" &&
-		value !== null &&
-		"isEmpty" in value &&
-		value.isEmpty === true,
+		typeof value === "object" && value !== null && "isEmpty" in value && value.isEmpty === true,
 };
 
 export const mockNullableExtension: SerializationExtension<{
@@ -293,8 +283,7 @@ export const mockErrorProneExtension: SerializationExtension<{
 export const mockFirstDateExtension: SerializationExtension<Date> = {
 	name: "first-date",
 	serialize: (value: Date) => `FIRST:${value.toISOString()}`,
-	deserialize: (value: string | Blob) =>
-		new Date((value as string).replace("FIRST:", "")),
+	deserialize: (value: string | Blob) => new Date((value as string).replace("FIRST:", "")),
 	canHandle: (value: unknown): value is Date => value instanceof Date,
 };
 

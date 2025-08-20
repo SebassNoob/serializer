@@ -1,17 +1,8 @@
-import {
-	DATA_KEY,
-	EXT_KEY_REGEX,
-	EXTENSION_KEY,
-	FILE_HOLE_KEY,
-	REF_KEY_REGEX,
-} from "./constants";
-import type {
-	ExtractExtensionTypes,
-	Serializable,
-	SerializationExtension,
-} from "./types";
+import { DATA_KEY, EXT_KEY_REGEX, EXTENSION_KEY, FILE_HOLE_KEY, REF_KEY_REGEX } from "./constants";
+import type { ExtractExtensionTypes, Serializable, SerializationExtension } from "./types";
 import { _validateExtensions } from "./utils";
 
+// biome-ignore lint/suspicious/noExplicitAny: unavoidable due to dynamic nature of extensions
 export function deserialize<T extends readonly SerializationExtension<any>[]>(
 	formData: FormData,
 	extensions: T = [] as unknown as T,
@@ -46,9 +37,7 @@ export function deserialize<T extends readonly SerializationExtension<any>[]>(
 		if (refMatch) {
 			// Ensure value is a Blob (has property 'size')
 			if (typeof value !== "object" || value === null || !("size" in value)) {
-				throw new Error(
-					`Expected Blob for file hole key '${key}', but got ${typeof value}`,
-				);
+				throw new Error(`Expected Blob for file hole key '${key}', but got ${typeof value}`);
 			}
 			fileHoles[key] = value as Blob;
 		} else if (extMatch) {
@@ -61,11 +50,7 @@ export function deserialize<T extends readonly SerializationExtension<any>[]>(
 						`Failed to parse extension data for key '${key}': ${error instanceof Error ? error.message : "Unknown error"}`,
 					);
 				}
-			} else if (
-				typeof value === "object" &&
-				value !== null &&
-				"size" in value
-			) {
+			} else if (typeof value === "object" && value !== null && "size" in value) {
 				// Extension returned a Blob
 				extensionData[key] = value as Blob;
 			} else {
@@ -138,9 +123,7 @@ export function deserialize<T extends readonly SerializationExtension<any>[]>(
 		if (typeof data === "object") {
 			const result: { [key: string]: unknown } = {};
 			for (const key in data) {
-				result[key] = recursiveReplaceFile(
-					(data as Record<string, unknown>)[key],
-				);
+				result[key] = recursiveReplaceFile((data as Record<string, unknown>)[key]);
 			}
 			return result;
 		}
