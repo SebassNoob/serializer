@@ -1,10 +1,6 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { faker } from "@faker-js/faker";
-import { bigIntExtension, dateExtension } from "../../extensions/extensions";
-import { DATA_KEY } from "../constants";
-import { deserialize } from "../deserialize";
-import { serialize } from "../serialize";
-import type { SerializationExtension } from "../types";
+import { BigIntExtension, DateExtension, DATA_KEY, deserialize, serialize, type SerializationExtension } from "..";
 
 describe("deserialize", () => {
 	beforeEach(() => {
@@ -251,19 +247,19 @@ describe("deserialize", () => {
 	});
 
 	describe("extension handling", () => {
-		test("should deserialize Date with dateExtension", () => {
+		test("should deserialize Date with DateExtension", () => {
 			const date = faker.date.recent();
-			const serialized = serialize(date, [dateExtension]);
-			const result = deserialize(serialized, [dateExtension]) as Date;
+			const serialized = serialize(date, [DateExtension]);
+			const result = deserialize(serialized, [DateExtension]) as Date;
 
 			expect(result).toBeInstanceOf(Date);
 			expect(result.getTime()).toBe(date.getTime());
 		});
 
-		test("should deserialize BigInt with bigIntExtension", () => {
+		test("should deserialize BigInt with BigIntExtension", () => {
 			const bigInt = BigInt(faker.number.bigInt());
-			const serialized = serialize(bigInt, [bigIntExtension]);
-			const result = deserialize(serialized, [bigIntExtension]);
+			const serialized = serialize(bigInt, [BigIntExtension]);
+			const result = deserialize(serialized, [BigIntExtension]);
 
 			expect(typeof result).toBe("bigint");
 			expect(result).toBe(bigInt);
@@ -279,10 +275,10 @@ describe("deserialize", () => {
 				count: faker.number.int(),
 			};
 
-			const serialized = serialize(obj, [dateExtension, bigIntExtension]);
+			const serialized = serialize(obj, [DateExtension, BigIntExtension]);
 			const result = deserialize(serialized, [
-				dateExtension,
-				bigIntExtension,
+				DateExtension,
+				BigIntExtension,
 			]) as typeof obj;
 
 			expect(result.name).toBe(obj.name);
@@ -312,7 +308,7 @@ describe("deserialize", () => {
 
 		test("should fail when extension is missing during deserialization", () => {
 			const date = faker.date.recent();
-			const serialized = serialize(date, [dateExtension]);
+			const serialized = serialize(date, [DateExtension]);
 
 			// Try to deserialize without the extension
 			expect(() => deserialize(serialized, [])).toThrow(
@@ -379,12 +375,12 @@ describe("deserialize", () => {
 			};
 
 			const serialized = serialize(originalData, [
-				dateExtension,
-				bigIntExtension,
+				DateExtension,
+				BigIntExtension,
 			]);
 			const deserialized = deserialize(serialized, [
-				dateExtension,
-				bigIntExtension,
+				DateExtension,
+				BigIntExtension,
 			]) as typeof originalData;
 
 			// Check primitive values

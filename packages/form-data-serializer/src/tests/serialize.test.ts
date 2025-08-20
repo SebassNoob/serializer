@@ -1,9 +1,6 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { faker } from "@faker-js/faker";
-import { bigIntExtension, dateExtension } from "../../extensions/extensions";
-import { DATA_KEY } from "../constants";
-import { serialize } from "../serialize";
-import type { SerializationExtension } from "../types";
+import { BigIntExtension, DateExtension, DATA_KEY, serialize, type SerializationExtension } from "..";
 
 describe("serialize", () => {
 	beforeEach(() => {
@@ -230,9 +227,9 @@ describe("serialize", () => {
 	});
 
 	describe("extension handling", () => {
-		test("should serialize Date with dateExtension", () => {
+		test("should serialize Date with DateExtension", () => {
 			const date = faker.date.recent();
-			const result = serialize(date, [dateExtension]);
+			const result = serialize(date, [DateExtension]);
 
 			const dataValue = JSON.parse(result.get(DATA_KEY) as string);
 			expect(dataValue).toMatch(/^\$ext:date:/);
@@ -244,9 +241,9 @@ describe("serialize", () => {
 			expect(JSON.parse(extEntry?.[1] as string)).toBe(date.toISOString());
 		});
 
-		test("should serialize BigInt with bigIntExtension", () => {
+		test("should serialize BigInt with BigIntExtension", () => {
 			const bigInt = BigInt(faker.number.bigInt());
-			const result = serialize(bigInt, [bigIntExtension]);
+			const result = serialize(bigInt, [BigIntExtension]);
 
 			const dataValue = JSON.parse(result.get(DATA_KEY) as string);
 			expect(dataValue).toMatch(/^\$ext:bigint:/);
@@ -267,7 +264,7 @@ describe("serialize", () => {
 				count: faker.number.int(),
 			};
 
-			const result = serialize(obj, [dateExtension, bigIntExtension]);
+			const result = serialize(obj, [DateExtension, BigIntExtension]);
 
 			const dataValue = JSON.parse(result.get(DATA_KEY) as string);
 			expect(dataValue.name).toBe(obj.name);
@@ -312,7 +309,7 @@ describe("serialize", () => {
 			};
 
 			// First extension should win
-			const result = serialize(date, [dateExtension, altDateExtension]);
+			const result = serialize(date, [DateExtension, altDateExtension]);
 
 			const dataValue = JSON.parse(result.get(DATA_KEY) as string);
 			expect(dataValue).toMatch(/^\$ext:date:/);
@@ -352,7 +349,7 @@ describe("serialize", () => {
 				},
 			};
 
-			const result = serialize(complexObj, [dateExtension, bigIntExtension]);
+			const result = serialize(complexObj, [DateExtension, BigIntExtension]);
 
 			// Verify structure
 			const dataValue = JSON.parse(result.get(DATA_KEY) as string);
@@ -426,7 +423,7 @@ describe("serialize", () => {
 			const obj = { name: faker.person.fullName() };
 
 			// This should not cause infinite recursion since extensions are checked first
-			const result = serialize(obj, [dateExtension]);
+			const result = serialize(obj, [DateExtension]);
 			expect(result.get(DATA_KEY)).toBe(JSON.stringify(obj));
 		});
 

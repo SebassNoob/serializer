@@ -11,8 +11,6 @@
 		"paths": {
 			"@/*": ["./src/*"], // Alias for src directory
 			"@": ["./src"],
-			"@_test/*": ["./_test/*"], // Alias for _test directory
-			"@_test": ["./src/_test"]
 		}
 	},
 	"include": ["src/**/*", "_test/**/*", "build/**/*"], // Include all source files

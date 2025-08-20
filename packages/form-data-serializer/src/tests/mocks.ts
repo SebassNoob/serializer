@@ -1,4 +1,4 @@
-import type { SerializationExtension } from "../types";
+import type { SerializationExtension } from "../serialize/types";
 
 // Mock Date extension for testing
 export const mockDateExtension: SerializationExtension<Date> = {

@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { faker } from "@faker-js/faker";
-import { deserialize } from "../deserialize";
-import { serialize } from "../serialize";
+import { deserialize, serialize } from "..";
 import type { MockComplexType } from "./mocks";
 import {
 	MockPerson,
