@@ -5,14 +5,14 @@ import { _validateExtensions } from "./utils";
 
 /**
  * Serializes a JavaScript object containing JSON primitives, Blobs, and custom extension types into a FormData object.
- * 
+ *
  * The function recursively traverses the object structure, replacing any Blob instances and extension-handled
  * values with unique reference keys. The actual Blob data and extension data are stored separately in the
  * FormData under these reference keys, while the main object structure (with references) is stored under
  * the "$data" key as JSON.
- * 
+ *
  * @typeParam T - Array type of serialization extensions
- * @param obj - The object to serialize. Can contain JSON primitives 
+ * @param obj - The object to serialize. Can contain JSON primitives
  *   (string, number, boolean, null), Blobs, arrays, nested objects, and values handled by extensions.
  * @param extensions - Array of serialization extensions that define how to handle custom types.
  *   Defaults to an empty array.
@@ -20,9 +20,9 @@ import { _validateExtensions } from "./utils";
  *   - "$data": JSON string of the main object structure with Blob/extension references
  *   - "$ref:<uuid>": Individual Blob entries referenced in the main structure
  *   - "$ext:<extension-name>:<uuid>": Extension-serialized data (either as Blob or JSON string)
- * 
+ *
  * @throws {@link Error} Throws an error if the input object is undefined
- * 
+ *
  * @example Basic serialization without extensions
  * ```typescript
  * const data = {
@@ -36,14 +36,14 @@ import { _validateExtensions } from "./utils";
  *     avatar: new Blob(["image data"], { type: "image/png" })
  *   }
  * };
- * 
+ *
  * const formData = serialize(data);
- * 
+ *
  * // The FormData will contain:
  * // - "$data": '{"name":"John","age":30,"active":true,"metadata":null,"tags":["user","admin"],"profile":{"bio":"Software developer","avatar":"$ref:01234567-89ab-cdef-0123-456789abcdef"}}'
  * // - "$ref:01234567-89ab-cdef-0123-456789abcdef": [Blob object with image data]
  * ```
- * 
+ *
  * @example With extensions for custom types (Date extension)
  * ```typescript
  * const dateExtension = {
@@ -52,7 +52,7 @@ import { _validateExtensions } from "./utils";
  *   serialize: (date) => date.toISOString(),
  *   deserialize: (str) => new Date(str)
  * };
- * 
+ *
  * const data = {
  *   user: "Alice",
  *   timestamps: {
@@ -65,17 +65,17 @@ import { _validateExtensions } from "./utils";
  *     { name: "purchase", date: new Date("2023-06-15T14:20:00.000Z") }
  *   ]
  * };
- * 
+ *
  * const formData = serialize(data, [dateExtension]);
- * 
+ *
  * // The FormData will contain:
  * // - "$data": '{"user":"Alice","timestamps":{"created":"$ext:date:abc123...","updated":"$ext:date:def456...","lastLogin":"$ext:date:ghi789..."},"events":[{"name":"signup","date":"$ext:date:jkl012..."},{"name":"purchase","date":"$ext:date:mno345..."}]}'
  * // - "$ext:date:abc123...": "2023-01-01T10:30:00.000Z"
- * // - "$ext:date:def456...": "2023-12-31T15:45:30.000Z"  
+ * // - "$ext:date:def456...": "2023-12-31T15:45:30.000Z"
  * // - "$ext:date:ghi789...": "2024-08-20T08:00:00.000Z"
  * // - "$ext:date:jkl012...": "2023-01-01T10:30:00.000Z"
  * // - "$ext:date:mno345...": "2023-06-15T14:20:00.000Z"
- * 
+ *
  * // Each Date object is replaced with a reference key in the main structure,
  * // and the serialized ISO string is stored separately in the FormData under
  * // the corresponding extension key.
