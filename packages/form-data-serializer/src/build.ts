@@ -8,7 +8,7 @@ interface BuildTask {
 }
 
 const LOCAL_OUTPUT_DIR = join(__dirname, "../docs");
-const APP_OUTPUT_DIR = join(__dirname, "../../../apps/docs/src/content/__api");
+const APP_OUTPUT_DIR = join(__dirname, "../../../apps/docs/src/content/_api");
 
 async function runBuildTasks(tasks: BuildTask[]) {
 	for (let i = 0; i < tasks.length; i++) {

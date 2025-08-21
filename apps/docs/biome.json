@@ -2,9 +2,9 @@
 	"$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
 	"extends": ["@lib/tooling/biome"],
 	"linter": {
-		"includes": ["**", "!**/node_modules/**", "!**/.next/**", "!**/.pagefind/**"]
+		"includes": ["**", "!**/node_modules/**", "!**/.next/**", "!**/_pagefind/**"]
 	},
 	"formatter": {
-		"includes": ["**", "!**/node_modules/**", "!**/.next/**", "!**/.pagefind/**"]
+		"includes": ["**", "!**/node_modules/**", "!**/.next/**", "!**/_pagefind/**"]
 	}
 }

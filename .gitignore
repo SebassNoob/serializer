@@ -38,7 +38,7 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # TypeDoc output
 **/form-data-serializer/docs
-**/content/__api
+**/content/_api
 
 # pagefind output
-**/.pagefind
+**/_pagefind
