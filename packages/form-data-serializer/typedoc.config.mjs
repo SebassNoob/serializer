@@ -9,25 +9,25 @@ const config = {
 	plugin: ["typedoc-plugin-markdown"],
 	readme: "none",
 	excludeInternal: true,
-  fileExtension: ".mdx",
-  entryPointStrategy: "expand",  // Create separate modules for each entry point
-  flattenOutputFiles: true,  // Put both files at the same level
-  outputFileStrategy: "modules",  // Group by modules - one file per module
-  hideBreadcrumbs: true,  
-  hidePageHeader: true,   
-  interfacePropertiesFormat: "table",
-  parametersFormat: "table",
-  typeAliasPropertiesFormat: "table",
-  enumMembersFormat: "table",
-  propertyMembersFormat: "table",
-  typeDeclarationFormat: "table",
-  includeVersion: true,
-  categorizeByGroup: true,
-  groupOrder: ["Functions", "Classes", "Interfaces", "Type Aliases", "Variables"],
-  navigation: {
-    includeCategories: true,
-    includeGroups: true,
-  },
+	fileExtension: ".mdx",
+	entryPointStrategy: "expand", // Create separate modules for each entry point
+	flattenOutputFiles: true, // Put both files at the same level
+	outputFileStrategy: "modules", // Group by modules - one file per module
+	hideBreadcrumbs: true,
+	hidePageHeader: true,
+	interfacePropertiesFormat: "table",
+	parametersFormat: "table",
+	typeAliasPropertiesFormat: "table",
+	enumMembersFormat: "table",
+	propertyMembersFormat: "table",
+	typeDeclarationFormat: "table",
+	includeVersion: true,
+	categorizeByGroup: true,
+	groupOrder: ["Functions", "Classes", "Interfaces", "Type Aliases", "Variables"],
+	navigation: {
+		includeCategories: true,
+		includeGroups: true,
+	},
 };
 
 export default config;

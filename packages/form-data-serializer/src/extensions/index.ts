@@ -1,9 +1,9 @@
 /**
- * @fileOverview 
+ * @fileOverview
  * This module provides ready-to-use extensions for common JavaScript types that are not
  * natively supported by JSON serialization. Each extension handles a specific data type
  * and provides seamless serialization/deserialization capabilities.
- * 
+ *
  * @module form-data-serializer/extensions
  *
  */

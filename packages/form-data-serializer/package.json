@@ -3,6 +3,17 @@
 	"version": "0.0.1",
 	"main": "dist/index.js",
 	"module": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"types": "./dist/index.d.ts"
+		},
+		"./extensions": {
+			"import": "./dist/extensions/index.js",
+			"types": "./dist/extensions/index.d.ts"
+		}
+	},
 	"devDependencies": {
 		"@faker-js/faker": "^9.9.0",
 		"@types/bun": "latest",
@@ -17,10 +28,9 @@
 	],
 	"scripts": {
 		"test": "bun test --coverage",
-		"lint": "bunx biome check",
+		"lint": "bunx biome lint",
 		"format": "bunx biome format --write",
 		"build": "bun run src/build.ts"
 	},
-	"type": "module",
-	"types": "dist/index.d.ts"
+	"type": "module"
 }

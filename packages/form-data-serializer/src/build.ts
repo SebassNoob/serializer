@@ -1,7 +1,6 @@
 import { cpSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import { build, spawnSync } from "bun";
-import { createProgram, ModuleKind, ModuleResolutionKind, ScriptTarget } from "typescript";
 
 interface BuildTask {
 	name: string;
@@ -40,27 +39,21 @@ async function bundleJavaScript() {
 		target: "bun",
 		minify: true,
 		sourcemap: true,
-		external: ["*"],
+		// Remove external: ["*"] to bundle everything properly
 	});
 }
 
 function generateTypeScriptDeclarations() {
-	const program = createProgram({
-		rootNames: ["src/index.ts", "src/extensions/index.ts"],
-		options: {
-			declaration: true,
-			emitDeclarationOnly: true,
-			outFile: "dist/bundle.d.ts", // This flattens all declarations into a single file
-			target: ScriptTarget.ES2020,
-			module: ModuleKind.ESNext,
-			moduleResolution: ModuleResolutionKind.NodeJs,
-			esModuleInterop: true,
-			allowSyntheticDefaultImports: true,
-			strict: true,
-		},
-	});
+	// Use the build-specific tsconfig
+	const tscResult = spawnSync(["bunx", "tsc", "--project", "tsconfig.build.json"]);
 
-	program.emit();
+	if (tscResult.exitCode !== 0) {
+		const errorMsg = tscResult.stderr
+			? new TextDecoder().decode(tscResult.stderr)
+			: "Unknown TypeScript error";
+		const stdout = tscResult.stdout ? new TextDecoder().decode(tscResult.stdout) : "";
+		throw new Error(`TypeScript compilation failed: ${errorMsg} ${stdout}`);
+	}
 }
 
 function generateDocumentation() {
@@ -72,7 +65,7 @@ function generateDocumentation() {
 			: "Unknown error";
 		throw new Error(errorMsg);
 	}
-	
+
 	// Remove README.mdx if it was generated
 	try {
 		rmSync(join(LOCAL_OUTPUT_DIR, "README.mdx"), { force: true });
