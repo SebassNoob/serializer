@@ -1,12 +1,9 @@
 import { NotFoundPage } from "nextra-theme-docs";
-import { Title } from "@lib/ui";
 
 export default function NotFound() {
 	return (
 		<NotFoundPage content="Submit an issue" labels="broken-link">
-			<Title order={1} className="text-4xl">
-				Page not found.
-			</Title>
+			<h1 className="text-3xl font-bold">Page Not Found</h1>
 		</NotFoundPage>
 	);
 }

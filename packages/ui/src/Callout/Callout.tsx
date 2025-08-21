@@ -1,5 +1,4 @@
 import type { CalloutProps, CalloutStyles } from "./types";
-import { Title } from "../Title";
 import { twMerge } from "tailwind-merge";
 
 const styles = {
@@ -79,9 +78,9 @@ export function Callout({ type = "info", title, children }: CalloutProps) {
 		<div className={twMerge("rounded-lg border p-4", styles[type].container)}>
 			<div className="flex items-start space-x-3">
 				<div className="flex-shrink-0 pt-0.5 sm:block hidden">{styles[type].icon}</div>
-				<div className="flex flex-col w-full gap-1">
-					<Title className={twMerge("font-medium text-lg", styles[type].title)}>{title}</Title>
-					<div className={twMerge("mt-1 text-sm flex flex-col gap-2", styles[type].content)}>
+				<div className="flex flex-col w-full gap-2">
+					{title && <h1 className={twMerge("font-medium text-lg", styles[type].title)}>{title}</h1>}
+					<div className={twMerge("text-sm flex flex-col gap-2", styles[type].content)}>
 						{children}
 					</div>
 				</div>

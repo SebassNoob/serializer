@@ -3,7 +3,7 @@ type CalloutType = "info" | "warning" | "success";
 
 export interface CalloutProps {
 	type?: CalloutType;
-	title: string;
+	title?: string;
 	children: string;
 }
 

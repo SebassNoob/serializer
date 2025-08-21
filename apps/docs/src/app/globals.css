@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import "tailwindcss" source("../../../../packages/ui");
 
 /* Optional: import Nextra theme styles */
 @import "nextra-theme-docs/style.css"; /* or nextra-theme-blog/style.css */
