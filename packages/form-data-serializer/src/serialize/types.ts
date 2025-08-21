@@ -96,7 +96,6 @@ export interface SerializationExtension<T = any> {
 	 * Unique identifier for this extension.
 	 * Used in the FormData keys to identify which extension serialized a value.
 	 *
-	 * @example "date", "regexp", "bigint"
 	 */
 	name: string;
 
@@ -106,10 +105,6 @@ export interface SerializationExtension<T = any> {
 	 * @param value - The value to serialize
 	 * @returns A string (stored as JSON in FormData) or Blob (stored directly in FormData)
 	 *
-	 * @example
-	 * ```typescript
-	 * serialize: (date: Date) => date.toISOString()
-	 * ```
 	 */
 	serialize: (value: T) => string | Blob;
 
@@ -119,10 +114,6 @@ export interface SerializationExtension<T = any> {
 	 * @param value - The serialized data (string or Blob) from FormData
 	 * @returns The reconstructed original value
 	 *
-	 * @example
-	 * ```typescript
-	 * deserialize: (str: string | Blob) => new Date(str as string)
-	 * ```
 	 */
 	deserialize: (value: string | Blob) => T;
 
@@ -132,10 +123,6 @@ export interface SerializationExtension<T = any> {
 	 * @param value - The value to check
 	 * @returns True if this extension can handle the value, false otherwise
 	 *
-	 * @example
-	 * ```typescript
-	 * canHandle: (value: unknown): value is Date => value instanceof Date
-	 * ```
 	 */
 	canHandle: (value: unknown) => value is T;
 }

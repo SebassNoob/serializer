@@ -5,7 +5,6 @@ import type { ReactNode } from "react";
 import { Text } from "@lib/ui";
 import "./globals.css";
 
-
 export const metadata = {
 	// Define your metadata here
 	// For more information on metadata API, see: https://nextjs.org/docs/app/building-your-application/optimizing/metadata
@@ -13,7 +12,7 @@ export const metadata = {
 
 const navbar = (
 	<Navbar
-		logo={<Text className='font-bold'>Form Data Serializer</Text>}
+		logo={<Text className="font-bold">Form Data Serializer</Text>}
 		// ... Your additional navbar options
 	/>
 );

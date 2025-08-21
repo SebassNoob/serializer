@@ -5,7 +5,7 @@ import { Callout } from "@lib/ui";
 // Get the default MDX components
 const themeComponents = getThemeComponents();
 const components: MDXComponents = {
-  Callout
+	Callout,
 };
 
 // Merge components

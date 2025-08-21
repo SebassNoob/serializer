@@ -28,6 +28,7 @@ const config = {
 		includeCategories: true,
 		includeGroups: true,
 	},
+	sanitizeComments: true,
 };
 
 export default config;
