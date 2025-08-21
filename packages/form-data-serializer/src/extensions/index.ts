@@ -1,41 +1,11 @@
 /**
- * @fileOverview Pre-built extensions for the form-data serializer.
- *
+ * @fileOverview 
  * This module provides ready-to-use extensions for common JavaScript types that are not
  * natively supported by JSON serialization. Each extension handles a specific data type
  * and provides seamless serialization/deserialization capabilities.
+ * 
+ * @module form-data-serializer/extensions
  *
- * @example Using individual extensions
- * ```typescript
- * import { serialize, deserialize } from 'form-data-serializer';
- * import { DateExtension, BigIntExtension } from 'form-data-serializer/extensions';
- *
- * const data = {
- *   timestamp: new Date(),
- *   largeNumber: 123456789012345678901234567890n
- * };
- *
- * const formData = serialize(data, [DateExtension, BigIntExtension]);
- * const restored = deserialize(formData, [DateExtension, BigIntExtension]);
- * ```
- *
- * @example Using all extensions
- * ```typescript
- * import { serialize, deserialize } from 'form-data-serializer';
- * import * as extensions from 'form-data-serializer/extensions';
- *
- * const allExtensions = Object.values(extensions);
- *
- * const complexData = {
- *   date: new Date(),
- *   error: new Error('Something went wrong'),
- *   bigNumber: 999999999999999999999n,
- *   symbol: Symbol('unique-key')
- * };
- *
- * const formData = serialize(complexData, allExtensions);
- * const restored = deserialize(formData, allExtensions);
- * ```
  */
 
 /**

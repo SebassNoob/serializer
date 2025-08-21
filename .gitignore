@@ -5,6 +5,7 @@ node_modules
 out
 dist
 *.tgz
+.next
 
 # code coverage
 coverage
@@ -37,3 +38,7 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # TypeDoc output
 **/form-data-serializer/docs
+**/content/__api
+
+# pagefind output
+**/.pagefind

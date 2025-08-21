@@ -2,7 +2,7 @@
 	"$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
 	"extends": ["@lib/tooling/biome"],
 	"linter": {
-		"includes": ["**", "!**/node_modules/**", "!**/.next/**", "!**/dist/**", "!**/test/**"]
+		"includes": ["**", "!**/node_modules/**", "!**/dist/**", "!**/test/**"]
 	},
 	"formatter": {
 		"includes": ["**", "!**/node_modules/**", "!**/dist/**", "!**/test/**"]

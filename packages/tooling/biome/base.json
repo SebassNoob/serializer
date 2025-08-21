@@ -34,10 +34,7 @@
 				"noUnusedVariables": "error"
 			}
 		},
-		"includes": [
-			"**",
-			"!**/node_modules/**"
-		]
+		"includes": ["**", "!**/node_modules/**"]
 	},
 	"formatter": {
 		"enabled": true,

@@ -7,15 +7,15 @@ import { _validateExtensions } from "./utils";
  *
  * This function reverses the serialization process by:
  * 1. Parsing the main object structure from the "$data" key
- * 2. Replacing file reference keys ("$ref:<uuid>") with their corresponding Blob objects
- * 3. Replacing extension reference keys ("$ext:<name>:<uuid>") with their deserialized custom types
+ * 2. Replacing file reference keys ("$ref:\<uuid\>") with their corresponding Blob objects
+ * 3. Replacing extension reference keys ("$ext:\<extension-name\>:\<uuid\>") with their deserialized custom types
  * 4. Recursively reconstructing the original object structure
  *
  * @typeParam T - Array type of serialization extensions
  * @param formData - The FormData object to deserialize. Must contain:
  *   - "$data": JSON string of the main object structure with references
- *   - "$ref:<uuid>": Blob entries for file references
- *   - "$ext:<extension-name>:<uuid>": Extension data (either JSON strings or Blobs)
+ *   - "$ref:\<uuid\>": Blob entries for file references
+ *   - "$ext:\<extension-name\>:\<uuid\>": Extension data (either JSON strings or Blobs)
  * @param extensions - Array of serialization extensions that match those used during serialization.
  *   Must include all extensions that were used to serialize extension references in the data.
  *   Defaults to an empty array.
@@ -77,7 +77,7 @@ import { _validateExtensions } from "./utils";
  * //   ]
  * // }
  *
- * // Each "$ext:date:<uuid>" reference is replaced with a reconstructed Date object
+ * // Each "$ext:date:\<uuid\>" reference is replaced with a reconstructed Date object
  * // using the extension's deserialize method on the stored ISO string.
  * ```
  */

@@ -18,8 +18,8 @@ import { _validateExtensions } from "./utils";
  *   Defaults to an empty array.
  * @returns A FormData object containing:
  *   - "$data": JSON string of the main object structure with Blob/extension references
- *   - "$ref:<uuid>": Individual Blob entries referenced in the main structure
- *   - "$ext:<extension-name>:<uuid>": Extension-serialized data (either as Blob or JSON string)
+ *   - "$ref:\<uuid\>": Individual Blob entries referenced in the main structure
+ *   - "$ext:\<extension-name\>:\<uuid\>": Extension-serialized data (either as Blob or JSON string)
  *
  * @throws {@link Error} Throws an error if the input object is undefined
  *

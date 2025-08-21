@@ -1,3 +1,5 @@
+import { cpSync, rmSync } from "node:fs";
+import { join } from "node:path";
 import { build, spawnSync } from "bun";
 import { createProgram, ModuleKind, ModuleResolutionKind, ScriptTarget } from "typescript";
 
@@ -5,6 +7,9 @@ interface BuildTask {
 	name: string;
 	fn: () => Promise<void> | void;
 }
+
+const LOCAL_OUTPUT_DIR = join(__dirname, "../docs");
+const APP_OUTPUT_DIR = join(__dirname, "../../../apps/docs/src/content/__api");
 
 async function runBuildTasks(tasks: BuildTask[]) {
 	for (let i = 0; i < tasks.length; i++) {
@@ -45,7 +50,7 @@ function generateTypeScriptDeclarations() {
 		options: {
 			declaration: true,
 			emitDeclarationOnly: true,
-			outDir: "dist",
+			outFile: "dist/bundle.d.ts", // This flattens all declarations into a single file
 			target: ScriptTarget.ES2020,
 			module: ModuleKind.ESNext,
 			moduleResolution: ModuleResolutionKind.NodeJs,
@@ -59,28 +64,27 @@ function generateTypeScriptDeclarations() {
 }
 
 function generateDocumentation() {
-	const typedocResult = spawnSync([
-		"bunx",
-		"typedoc",
-		"--entryPoints",
-		"src/index.ts",
-		"src/extensions/index.ts",
-		"--out",
-		"docs",
-		"--plugin",
-		"typedoc-plugin-markdown",
-		"--readme",
-		"none",
-		"--excludeInternal",
-	]);
+	const typedocResult = spawnSync(["bunx", "typedoc", "--options", "typedoc.config.mjs"]);
 
 	if (typedocResult.exitCode !== 0) {
 		const errorMsg = typedocResult.stderr
 			? new TextDecoder().decode(typedocResult.stderr)
 			: "Unknown error";
-		console.error("TypeDoc generation failed:", errorMsg);
-		process.exit(1);
+		throw new Error(errorMsg);
 	}
+	
+	// Remove README.mdx if it was generated
+	try {
+		rmSync(join(LOCAL_OUTPUT_DIR, "README.mdx"), { force: true });
+	} catch {
+		// Ignore if file doesn't exist
+	}
+}
+
+function copyToDocsApp() {
+	rmSync(APP_OUTPUT_DIR, { recursive: true, force: true });
+	// Copy files from source to target
+	cpSync(LOCAL_OUTPUT_DIR, APP_OUTPUT_DIR, { recursive: true });
 }
 
 // Execute build steps
@@ -88,6 +92,7 @@ const buildTasks: BuildTask[] = [
 	{ name: "JS bundled at dist/", fn: bundleJavaScript },
 	{ name: "TypeScript declarations generated at dist/", fn: generateTypeScriptDeclarations },
 	{ name: "Documentation generated at docs/", fn: generateDocumentation },
+	{ name: "Documentation copied to apps/docs/public/docs/", fn: copyToDocsApp },
 ];
 
 await runBuildTasks(buildTasks);
