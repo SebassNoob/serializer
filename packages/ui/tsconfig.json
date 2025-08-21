@@ -1,0 +1,15 @@
+{
+	"extends": "@lib/tooling/typescript",
+	"compilerOptions": {
+		"esModuleInterop": true, // Allow default imports from non-ES modules
+		"jsx": "react-jsx", // Use React JSX Transform
+		"verbatimModuleSyntax": true, // Enforce strict import/export type syntax
+		"baseUrl": ".", // Ensure TypeScript resolves the paths correctly
+		"paths": {
+			"@/*": ["./src/*"], // Alias for src directory
+			"@": ["./src"]
+		}
+	},
+	"include": ["src/**/*", "_test/**/*"], // Include all source files
+	"exclude": ["node_modules"] // Exclude node_modules
+}

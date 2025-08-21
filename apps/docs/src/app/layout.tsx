@@ -2,6 +2,7 @@ import { Footer, Layout, Navbar } from "nextra-theme-docs";
 import { Head } from "nextra/components";
 import { getPageMap } from "nextra/page-map";
 import type { ReactNode } from "react";
+import { Text } from "@lib/ui";
 import "./globals.css";
 
 
@@ -12,7 +13,7 @@ export const metadata = {
 
 const navbar = (
 	<Navbar
-		logo={<b>Form Data Serializer</b>}
+		logo={<Text className='font-bold'>Form Data Serializer</Text>}
 		// ... Your additional navbar options
 	/>
 );
