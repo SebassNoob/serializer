@@ -1,5 +1,12 @@
 # form-data-serializer
 
+## 0.1.2
+
+### Patch Changes
+
+- 13bed85: fix: types non-compatibility with older node versions
+  fix: non-compatibility with node>=18
+
 ## 0.1.1
 
 ### Patch Changes

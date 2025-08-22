@@ -1,6 +1,6 @@
 {
 	"name": "form-data-serializer",
-	"version": "0.1.1",
+	"version": "0.1.2",
 	"description": "A modern form data serializer with extension support",
 	"main": "dist/index.js",
 	"module": "dist/index.js",
@@ -22,7 +22,9 @@
 	},
 	"typesVersions": {
 		"*": {
-			"extensions": ["./dist/extensions/index.d.ts"]
+			"extensions": [
+				"./dist/extensions/index.d.ts"
+			]
 		}
 	},
 	"devDependencies": {
