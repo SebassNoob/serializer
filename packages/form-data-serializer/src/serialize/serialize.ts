@@ -1,4 +1,4 @@
-import { randomUUIDv7 } from "bun";
+import { randomUUID } from "node:crypto";
 import { DATA_KEY, EXTENSION_KEY, FILE_HOLE_KEY } from "./constants";
 import type { ExtractExtensionTypes, Serializable, SerializationExtension } from "./types";
 import { _validateExtensions } from "./utils";
@@ -100,7 +100,7 @@ export function serialize<T extends readonly SerializationExtension<any>[]>(
 	// yippee side effects
 	function replaceFileWithHole(file: Blob) {
 		// Generate a unique ID for the file and store it in the holes object
-		const id = randomUUIDv7();
+		const id = randomUUID();
 		holes[FILE_HOLE_KEY(id)] = file;
 		return FILE_HOLE_KEY(id);
 	}
@@ -109,7 +109,7 @@ export function serialize<T extends readonly SerializationExtension<any>[]>(
 		for (const extension of extensions) {
 			if (extension.canHandle(data)) {
 				const serialized = extension.serialize(data);
-				const id = randomUUIDv7();
+				const id = randomUUID();
 				const key = EXTENSION_KEY(extension.name, id);
 
 				// Extensions return strings
