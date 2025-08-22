@@ -39,7 +39,6 @@ async function bundleJavaScript() {
 		target: "bun",
 		minify: true,
 		sourcemap: true,
-		// Remove external: ["*"] to bundle everything properly
 	});
 }
 

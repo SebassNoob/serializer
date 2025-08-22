@@ -1,2 +1,90 @@
 # Introduction
 
+<br/>
+
+<Callout type="warning">
+  This package is currently in beta and may contain bugs.
+</Callout>
+
+`form-data-serializer` is an extendable JSON to FormData serializer. 
+
+## Purpose
+
+Data is transferred over the network in several ways; one of the most popular methods is via JSON.
+
+However, JSON only supports serialization of a few primitives, and notably lacks good `File` and `Blob` support. 
+This package aims to solve this issue by making everything a `FormData` object, 
+providing native file serialization, 
+and allowing you to customise how you want to serialize non primitive data (`Date`, `BigInt`, `ArrayBuffer`, etc...).
+
+
+## Installation
+
+To install, choose your favorite package manager:
+
+- `bun add form-data-serializer`
+- `npm install form-data-serializer`
+- `yarn add form-data-serializer`
+- `pnpm add form-data-serializer`
+
+## Usage
+To use the serializer, you can import it and call the `serialize` function with your data:
+
+```javascript
+import { serialize, deserialize } from 'form-data-serializer';
+const data = {
+  name: 'John Doe',
+  age: 30,
+  profilePicture: new File([''], 'profile.jpg', { type: 'image/jpeg' }),
+};
+const formData = serialize(data);
+console.log(formData instanceof FormData); // true
+
+/**
+ * formData will roughly contain:
+ * - $data -> { name: 'John Doe', age: 30, profilePicture: '$ref:01234567-89ab-cdef-0123-456789abcdef' }
+ * - $ref:01234567-89ab-cdef-0123-456789abcdef -> { name: 'profile.jpg', type: 'image/jpeg', size: 0 }
+ * 
+ * Notice that the main data object is stored in the `$data` property,
+ * and the file is stored in a reference object with a unique identifier.
+*/
+
+const deserializedData = deserialize(formData);
+console.log(deserializedData);
+/**
+ * deserializedData will be the same as the original data object:
+ * {
+ *   name: 'John Doe',
+ *   age: 30,
+ *   profilePicture: File { name: 'profile.jpg', type: 'image/jpeg', size: 0 }
+ * }
+ */
+
+```
+
+### Serialization Extensions
+
+You can extend the serializer to support non-primitive types like `BigInt`, `Error`, or your custom data type 
+by creating a serialization extension.
+
+Read more about how to create a serialization extension in the [Building Extensions](/building-extensions) section.
+
+### Typescript
+This package is written in TypeScript, so you can use it with TypeScript out of the box.
+
+```typescript
+import { serialize, deserialize } from 'form-data-serializer';
+
+serialize;
+/* function serialize<T extends readonly SerializationExtension<any>[]>(
+  obj: Serializable<ExtractExtensionTypes<T>>,
+	extensions: T = [] as unknown as T,
+): FormData */
+
+deserialize;
+/* deserialize<T extends readonly SerializationExtension<any>[]>(
+	formData: FormData,
+	extensions: T = [] as unknown as T,
+): Serializable<ExtractExtensionTypes<T>> */
+
+```

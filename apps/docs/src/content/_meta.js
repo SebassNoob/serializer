@@ -1,5 +1,6 @@
 export default {
 	index: "Introduction",
-	"how-to-use": "How to use",
+	"building-extensions": "Building Extensions",
+	"using-extensions": "Using Extensions",
 	_api: "API",
 };
