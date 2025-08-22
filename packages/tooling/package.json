@@ -11,5 +11,6 @@
 	"scripts": {
 		"format": "bunx biome format --write .",
 		"lint": "bunx biome lint --write ."
-	}
+	},
+	"version": "0.0.1"
 }
