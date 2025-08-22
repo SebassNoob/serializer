@@ -79,37 +79,8 @@ jobs:
         if: steps.check-changesets.outputs.has-changesets == 'true' || inputs.force == true
         uses: changesets/action@v1
         with:
-          # This expects you to have a script called release which does a build for your packages and calls changeset publish
           publish: bun run changesets:publish
+          createGithubReleases: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Create GitHub Releases
-        if: steps.changesets.outputs.published == 'true'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo '${{ steps.changesets.outputs.publishedPackages }}' | jq -r '.[] | @base64' | while read package; do
-            decoded=$(echo $package | base64 --decode)
-            name=$(echo $decoded | jq -r '.name')
-            version=$(echo $decoded | jq -r '.version')
-            
-            # Extract changelog for this specific package from CHANGELOG.md
-            changelog_file="packages/${name#*/}/CHANGELOG.md"
-            if [ -f "$changelog_file" ]; then
-              # Extract the latest version's changelog (between the first ## and the second ##)
-              changelog=$(sed -n "/## $version/,/## /p" "$changelog_file" | sed '$d' | tail -n +2)
-              if [ -z "$changelog" ]; then
-                # Fallback: get everything after the first ## until the next ## or end of file
-                changelog=$(sed -n '/^## /,/^## /p' "$changelog_file" | sed '$d' | tail -n +2)
-              fi
-            else
-              changelog="Release of ${name} version ${version}"
-            fi
-            
-            # Create release for each published package
-            gh release create "${name}@${version}" \
-              --title "${name} v${version}" \
-              --notes "${changelog:-Release of ${name} version ${version}}"
-          done
