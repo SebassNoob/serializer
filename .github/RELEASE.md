@@ -9,12 +9,15 @@ This repository uses [Changesets](https://github.com/changesets/changesets) for 
    bun run changesets
    ```
    This will prompt you to describe your changes and select which packages are affected.
+   Commit the changeset file.
 
-2. **Release workflow**: The CI workflow (`.github/workflows/release.yml`) automatically:
-   - Runs on every push to the `master` branch
-   - Builds and tests all packages
-   - Creates a "Version Packages" pull request when there are unreleased changesets
-   - When the PR is merged, publishes packages to npm and creates GitHub releases
+2. **Manual release workflow**: The CI workflow (`.github/workflows/release.yml`) is triggered manually:
+   - Go to the "Actions" tab in your GitHub repository
+   - Select the "Release" workflow
+   - Click "Run workflow"
+   - The workflow will automatically check if there are changesets to process
+   - If changesets exist, it will version the packages and publish to npm
+   - GitHub releases will be created automatically for published packages
 
 ## Setup Requirements
 
@@ -50,8 +53,32 @@ When creating a changeset, you can choose:
 
 1. Make your changes
 2. Run `bun run changesets` and describe your changes
-3. Commit and push to a feature branch
-4. Create a pull request
-5. After the PR is merged, the CI will create a "Version Packages" PR
-6. Review and merge the "Version Packages" PR
-7. CI automatically publishes to npm and creates GitHub releases
+3. Commit and push your changes (including the changeset file)
+4. Go to GitHub Actions and manually trigger the "Release" workflow
+5. The workflow will automatically:
+   - Check if there are changesets to process
+   - Version the packages using `changeset version` (this removes changeset files and updates versions/changelogs)
+   - Commit the version changes back to the repository
+   - Publish packages to npm
+   - Create GitHub releases with changelog information
+
+## What happens to changeset files?
+
+**Yes, changeset files are removed during the release process.** This is the intended behavior:
+
+1. Changeset files (`.changeset/*.md`) are temporary files that describe pending changes
+2. When `changeset version` runs, it:
+   - Consumes (deletes) the changeset files
+   - Updates package versions in `package.json`
+   - Adds entries to `CHANGELOG.md` files
+3. These changes are committed back to your repository
+4. The packages are then published to npm
+
+This is the standard Changesets workflow - the changeset files are meant to be consumed and removed once they've been processed into version bumps and changelog entries.
+
+## Manual Workflow Options
+
+When running the workflow manually, you have the following options:
+
+- **Normal run**: The workflow will only proceed if there are changeset files to process
+- **Force run**: Check the "Force publish even if no changesets exist" option to bypass the changeset check (use with caution)

@@ -1,12 +1,13 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force publish even if no changesets exist'
+        required: false
+        default: false
+        type: boolean
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -39,15 +40,47 @@ jobs:
       - name: Run tests
         run: bun run test
 
+      - name: Check for changesets
+        id: check-changesets
+        run: |
+          if ls .changeset/*.md >/dev/null 2>&1 && [ $(ls .changeset/*.md | grep -v README.md | wc -l) -gt 0 ]; then
+            echo "has-changesets=true" >> $GITHUB_OUTPUT
+            echo "Found changesets to process"
+          else
+            echo "has-changesets=false" >> $GITHUB_OUTPUT
+            echo "No changesets found"
+          fi
+
+      - name: Exit if no changesets (unless forced)
+        if: steps.check-changesets.outputs.has-changesets == 'false' && inputs.force != true
+        run: |
+          echo "No changesets found and force is not enabled. Exiting."
+          exit 1
+
+      - name: Version packages
+        if: steps.check-changesets.outputs.has-changesets == 'true' || inputs.force == true
+        run: bun run changesets:version
+
+      - name: Commit version changes
+        if: steps.check-changesets.outputs.has-changesets == 'true' || inputs.force == true
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "ci: version packages"
+            git push
+          fi
+
       - name: Create Release Pull Request or Publish to npm
         id: changesets
+        if: steps.check-changesets.outputs.has-changesets == 'true' || inputs.force == true
         uses: changesets/action@v1
         with:
           # This expects you to have a script called release which does a build for your packages and calls changeset publish
           publish: bun run changesets:publish
-          version: bun run changesets:version
-          commit: "ci: release packages"
-          title: "ci: release packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -62,8 +95,21 @@ jobs:
             name=$(echo $decoded | jq -r '.name')
             version=$(echo $decoded | jq -r '.version')
             
+            # Extract changelog for this specific package from CHANGELOG.md
+            changelog_file="packages/${name#*/}/CHANGELOG.md"
+            if [ -f "$changelog_file" ]; then
+              # Extract the latest version's changelog (between the first ## and the second ##)
+              changelog=$(sed -n "/## $version/,/## /p" "$changelog_file" | sed '$d' | tail -n +2)
+              if [ -z "$changelog" ]; then
+                # Fallback: get everything after the first ## until the next ## or end of file
+                changelog=$(sed -n '/^## /,/^## /p' "$changelog_file" | sed '$d' | tail -n +2)
+              fi
+            else
+              changelog="Release of ${name} version ${version}"
+            fi
+            
             # Create release for each published package
             gh release create "${name}@${version}" \
               --title "${name} v${version}" \
-              --notes "Release of ${name} version ${version}"
+              --notes "${changelog:-Release of ${name} version ${version}}"
           done
