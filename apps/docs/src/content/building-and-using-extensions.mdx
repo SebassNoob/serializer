@@ -1,0 +1,86 @@
+# Building and Using Extensions
+
+Sometime you may need to serialize values that are non-primitive and not a `File` or `Blob`.
+In these cases, you need a custom serializer to handle the specific data structure. 
+`form-data-serializer` is extendable, allowing you to create custom serializers for your specific needs.
+
+## Creating a Custom Serializer
+To create a custom serializer, you need to implement the `SerializationExtension<T>` interface. Here's a basic example:
+
+```typescript
+import type { SerializationExtension } from 'form-data-serializer';
+
+const dateExtension: SerializationExtension<Date> = {
+  name: "date",
+  canHandle: (value): value is Date => value instanceof Date,
+  serialize: (date) => date.toISOString(),
+  deserialize: (str) => new Date(str as string)
+};
+export default dateExtension;
+```
+
+### Key Properties
+
+You must implement the following properties in your custom serializer:
+
+- `name`: A unique name for your extension. This will be used internally with `$ext:\_name\_:\_uuid\_` as the key to identify your serialized data.
+- `canHandle`: A function that checks if the value can be handled by this extension. It should return `true` if the value is of the type this extension handles.
+- `serialize`: A function that converts the value to a string representation, since `FormData` with extensions only supports string serialization for synchronous operation.
+- `deserialize`: A function that converts the serialized string back to the original value type.
+
+### Examples
+You can create multiple extensions for different types of data. For example, you might have a serializer for dates, another for custom objects, etc. Each extension should follow the same structure as shown above.
+
+```typescript
+import type { SerializationExtension } from 'form-data-serializer';
+
+const customObjectExtension: SerializationExtension<{ id: number; name: string }> = {
+  name: "customObject",
+  canHandle: (value): value is { id: number; name: string } => typeof value === 'object' && 'id' in value && 'name' in value,
+  serialize: (obj) => JSON.stringify(obj),
+  deserialize: (str) => JSON.parse(str as string)
+};
+export default customObjectExtension;
+```
+
+```typescript
+import type { SerializationExtension } from 'form-data-serializer';
+const Uint8ArrayExtension: SerializationExtension<Uint8Array> = {
+  name: "uint8array",
+  canHandle: (value): value is Uint8Array => value instanceof Uint8Array,
+  serialize: (arr) => {
+    // Convert Uint8Array to base64 string for synchronous handling
+    const base64 = btoa(String.fromCharCode(...arr));
+    return base64;
+  },
+  deserialize: (str) => {
+    // Convert base64 string back to Uint8Array
+    const binaryString = atob(str as string);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+  }
+};
+export default Uint8ArrayExtension;
+```
+
+## Using the Extension
+To register your custom serializer, pass it to `serialize` or `deserialize`.
+
+```typescript
+import { serialize, deserialize } from 'form-data-serializer';
+import dateExtension from './dateExtension';
+
+const data = {
+  name: "John Doe",
+  birthDate: new Date("1990-01-01")
+};
+
+const serialized = serialize(data, [dateExtension]);
+const deserialized = deserialize(serialized, [dateExtension]);
+console.log(serialized); // FormData { $data -> { name: "John Doe", birthDate: "$ext:date:123-456-789" }, $ext:date:123-456-789 -> "1990-01-01T00:00:00.000Z" }
+console.log(deserialized); // { name: "John Doe", birthDate: Date("1990-01-01T00:00:00.000Z") }
+```
+

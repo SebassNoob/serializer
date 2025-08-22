@@ -31,12 +31,12 @@
         "@types/react-dom": "^19",
         "pagefind": "^1.3.0",
         "tailwindcss": "^4",
-        "typescript": "^5",
+        "typescript": "^5.9.2",
       },
     },
     "packages/form-data-serializer": {
       "name": "form-data-serializer",
-      "version": "0.0.1",
+      "version": "0.1.0",
       "devDependencies": {
         "@faker-js/faker": "^9.9.0",
         "@types/bun": "latest",
@@ -49,6 +49,7 @@
     },
     "packages/tooling": {
       "name": "@lib/tooling",
+      "version": "0.0.1",
     },
     "packages/ui": {
       "name": "@lib/ui",

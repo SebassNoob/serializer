@@ -106,7 +106,7 @@ export interface SerializationExtension<T = any> {
 	 * @returns A string (stored as JSON in FormData) or Blob (stored directly in FormData)
 	 *
 	 */
-	serialize: (value: T) => string | Blob;
+	serialize: (value: T) => string;
 
 	/**
 	 * Reconstructs a value of type T from its serialized form.
@@ -115,7 +115,7 @@ export interface SerializationExtension<T = any> {
 	 * @returns The reconstructed original value
 	 *
 	 */
-	deserialize: (value: string | Blob) => T;
+	deserialize: (value: string) => T;
 
 	/**
 	 * Type guard function that determines if a value can be handled by this extension.

@@ -272,7 +272,8 @@ describe("serialize", () => {
 			const customData = { special: faker.lorem.sentence() };
 			const blobExtension: SerializationExtension<typeof customData> = {
 				name: "custom-blob",
-				serialize: (value) => new Blob([JSON.stringify(value)], { type: "application/json" }),
+				// Extensions can no longer return Blobs, only strings
+				serialize: (value) => JSON.stringify(value),
 				deserialize: (value) => JSON.parse(value as string),
 				canHandle: (value): value is typeof customData =>
 					typeof value === "object" && value !== null && "special" in value,
@@ -283,10 +284,10 @@ describe("serialize", () => {
 			const dataValue = JSON.parse(result.get(DATA_KEY) as string);
 			expect(dataValue).toMatch(/^\$ext:custom-blob:/);
 
-			// Should have the blob in form data (not as JSON string)
+			// Should have the string data in form data (as JSON string)
 			const entries = Array.from(result.entries());
 			const extEntry = entries.find(([key]) => key.startsWith("$ext:custom-blob:"));
-			expect(extEntry?.[1]).toBeInstanceOf(Blob);
+			expect(typeof extEntry?.[1]).toBe('string');
 		});
 
 		test("should handle multiple extensions with priority order", () => {

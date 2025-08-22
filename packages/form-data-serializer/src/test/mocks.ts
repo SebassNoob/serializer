@@ -20,7 +20,7 @@ export const mockBigIntExtension: SerializationExtension<bigint> = {
 export const mockSetExtension: SerializationExtension<Set<string>> = {
 	name: "set",
 	serialize: (value: Set<string>) => JSON.stringify([...value]),
-	deserialize: (value: string | Blob) => new Set(JSON.parse(value as string)),
+	deserialize: (value) => new Set(JSON.parse(value as string)),
 	canHandle: (value: unknown): value is Set<string> => value instanceof Set,
 };
 
@@ -28,7 +28,7 @@ export const mockSetExtension: SerializationExtension<Set<string>> = {
 export const mockMapExtension: SerializationExtension<Map<string, number>> = {
 	name: "map",
 	serialize: (value: Map<string, number>) => JSON.stringify([...value.entries()]),
-	deserialize: (value: string | Blob) => new Map(JSON.parse(value as string)),
+	deserialize: (value) => new Map(JSON.parse(value as string)),
 	canHandle: (value: unknown): value is Map<string, number> => value instanceof Map,
 };
 
@@ -36,7 +36,7 @@ export const mockMapExtension: SerializationExtension<Map<string, number>> = {
 export const mockRegExpExtension: SerializationExtension<RegExp> = {
 	name: "regex",
 	serialize: (value: RegExp) => JSON.stringify({ source: value.source, flags: value.flags }),
-	deserialize: (value: string | Blob) => {
+	deserialize: (value) => {
 		const { source, flags } = JSON.parse(value as string);
 		return new RegExp(source, flags);
 	},
@@ -47,7 +47,7 @@ export const mockRegExpExtension: SerializationExtension<RegExp> = {
 export const mockUrlExtension: SerializationExtension<URL> = {
 	name: "url",
 	serialize: (value: URL) => value.href,
-	deserialize: (value: string | Blob) => new URL(value as string),
+	deserialize: (value) => new URL(value as string),
 	canHandle: (value: unknown): value is URL => value instanceof URL,
 };
 
@@ -55,8 +55,8 @@ export const mockUrlExtension: SerializationExtension<URL> = {
 export const mockSymbolExtension: SerializationExtension<symbol> = {
 	name: "symbol",
 	serialize: (value: symbol) => value.toString(),
-	deserialize: (value: string | Blob) =>
-		Symbol.for((value as string).replace("Symbol(", "").replace(")", "")),
+	deserialize: (value) =>
+		Symbol.for(String(value).replace(/^Symbol\((.+)\)$/, "$1")),
 	canHandle: (value: unknown): value is symbol => typeof value === "symbol",
 };
 
@@ -69,7 +69,7 @@ export const mockErrorExtension: SerializationExtension<Error> = {
 			message: value.message,
 			stack: value.stack,
 		}),
-	deserialize: (value: string | Blob) => {
+	deserialize: (value) => {
 		const parsed = JSON.parse(value as string);
 		const error = new Error(parsed.message);
 		error.name = parsed.name;
@@ -79,7 +79,7 @@ export const mockErrorExtension: SerializationExtension<Error> = {
 	canHandle: (value: unknown): value is Error => value instanceof Error,
 };
 
-// Mock extensions that return Blobs (for testing limitations)
+// Mock extensions that previously returned Blobs (now return strings due to sync limitations)
 export const mockImageDataExtension: SerializationExtension<{
 	width: number;
 	height: number;
@@ -92,12 +92,9 @@ export const mockImageDataExtension: SerializationExtension<{
 			height: value.height,
 			data: Array.from(value.data),
 		};
-		return new Blob([JSON.stringify(data)], { type: "application/json" });
+		return JSON.stringify(data);
 	},
-	deserialize: (value: string | Blob) => {
-		if (value instanceof Blob) {
-			throw new Error("Cannot read Blob synchronously");
-		}
+	deserialize: (value) => {
 		const parsed = JSON.parse(value as string);
 		return {
 			width: parsed.width,
@@ -116,12 +113,20 @@ export const mockImageDataExtension: SerializationExtension<{
 
 export const mockArrayBufferExtension: SerializationExtension<ArrayBuffer> = {
 	name: "arraybuffer",
-	serialize: (value: ArrayBuffer) => new Blob([value]),
-	deserialize: (value: string | Blob) => {
-		if (value instanceof Blob) {
-			throw new Error("Cannot read Blob synchronously");
+	serialize: (value: ArrayBuffer) => {
+		// Convert ArrayBuffer to base64 string for synchronous handling
+		const bytes = new Uint8Array(value);
+		const base64 = btoa(String.fromCharCode(...bytes));
+		return base64;
+	},
+	deserialize: (value) => {
+		// Convert base64 string back to ArrayBuffer
+		const binaryString = atob(value as string);
+		const bytes = new Uint8Array(binaryString.length);
+		for (let i = 0; i < binaryString.length; i++) {
+			bytes[i] = binaryString.charCodeAt(i);
 		}
-		throw new Error("Expected Blob for ArrayBuffer deserialization");
+		return bytes.buffer;
 	},
 	canHandle: (value: unknown): value is ArrayBuffer => value instanceof ArrayBuffer,
 };
@@ -138,12 +143,9 @@ export const mockBinaryDataExtension: SerializationExtension<{
 			metadata: value.metadata,
 			content: Array.from(value.content),
 		});
-		return new Blob([metadata], { type: "application/json" });
+		return metadata;
 	},
-	deserialize: (value: string | Blob) => {
-		if (value instanceof Blob) {
-			throw new Error("Cannot read Blob synchronously");
-		}
+	deserialize: (value) => {
 		const parsed = JSON.parse(value as string);
 		return {
 			type: parsed.type,
@@ -187,7 +189,7 @@ export const mockPersonExtension: SerializationExtension<MockPerson> = {
 			age: value.age,
 			email: value.email,
 		}),
-	deserialize: (value: string | Blob) => {
+	deserialize: (value) => {
 		const parsed = JSON.parse(value as string);
 		return new MockPerson(parsed.name, parsed.age, parsed.email);
 	},
@@ -212,7 +214,7 @@ export const mockNullableExtension: SerializationExtension<{
 			hasDate: value.value !== null,
 			date: value.value ? value.value.toISOString() : null,
 		}),
-	deserialize: (value: string | Blob) => {
+	deserialize: (value) => {
 		const parsed = JSON.parse(value as string);
 		return {
 			value: parsed.hasDate ? new Date(parsed.date) : null,
@@ -243,7 +245,7 @@ export const mockComplexExtension: SerializationExtension<MockComplexType> = {
 		};
 		return JSON.stringify(flattened);
 	},
-	deserialize: (value: string | Blob) => {
+	deserialize: (value) => {
 		const parsed = JSON.parse(value as string);
 		// This is a simplified deserialization for testing
 		return {
@@ -283,14 +285,14 @@ export const mockErrorProneExtension: SerializationExtension<{
 export const mockFirstDateExtension: SerializationExtension<Date> = {
 	name: "first-date",
 	serialize: (value: Date) => `FIRST:${value.toISOString()}`,
-	deserialize: (value: string | Blob) => new Date((value as string).replace("FIRST:", "")),
+	deserialize: (value) => new Date((value as string).replace("FIRST:", "")),
 	canHandle: (value: unknown): value is Date => value instanceof Date,
 };
 
 export const mockSecondDateExtension: SerializationExtension<Date> = {
 	name: "second-date",
 	serialize: (value: Date) => `SECOND:${value.getTime()}`,
-	deserialize: (value: string | Blob) =>
+	deserialize: (value) =>
 		new Date(Number.parseInt((value as string).replace("SECOND:", ""), 10)),
 	canHandle: (value: unknown): value is Date => value instanceof Date,
 };

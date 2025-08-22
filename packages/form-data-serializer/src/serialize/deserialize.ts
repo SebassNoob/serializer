@@ -120,7 +120,7 @@ export function deserialize<T extends readonly SerializationExtension<any>[]>(
 			}
 			fileHoles[key] = value as Blob;
 		} else if (extMatch) {
-			// Extension data can be either a string (JSON) or a Blob
+			// Extension data is always a string (JSON) since extensions only return strings
 			if (typeof value === "string") {
 				try {
 					extensionData[key] = JSON.parse(value);
@@ -129,12 +129,9 @@ export function deserialize<T extends readonly SerializationExtension<any>[]>(
 						`Failed to parse extension data for key '${key}': ${error instanceof Error ? error.message : "Unknown error"}`,
 					);
 				}
-			} else if (typeof value === "object" && value !== null && "size" in value) {
-				// Extension returned a Blob
-				extensionData[key] = value as Blob;
 			} else {
 				throw new Error(
-					`Expected string or Blob for extension key '${key}', but got ${typeof value}`,
+					`Expected string for extension key '${key}', but got ${typeof value}`,
 				);
 			}
 		}
@@ -185,8 +182,8 @@ export function deserialize<T extends readonly SerializationExtension<any>[]>(
 			}
 
 			const extData = extensionData[key];
-			if (!(typeof extData === "string" || extData instanceof Blob)) {
-				throw new Error(`Extension data is not string or Blob for key: ${key}`);
+			if (typeof extData !== "string") {
+				throw new Error(`Extension data is not string for key: ${key}`);
 			}
 
 			return extension.deserialize(extData);

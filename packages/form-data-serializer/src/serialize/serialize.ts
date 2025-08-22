@@ -19,7 +19,7 @@ import { _validateExtensions } from "./utils";
  * @returns A FormData object containing:
  *   - "$data": JSON string of the main object structure with Blob/extension references
  *   - "$ref:\_uuid\_": Individual Blob entries referenced in the main structure
- *   - "$ext:\_extension-name\_:\_uuid\_": Extension-serialized data (either as Blob or JSON string)
+ *   - "$ext:\_extension-name\_:\_uuid\_": Extension-serialized data as JSON strings
  *
  * @throws {@link Error} Throws an error if the input object is undefined
  *
@@ -112,13 +112,8 @@ export function serialize<T extends readonly SerializationExtension<any>[]>(
 				const id = randomUUIDv7();
 				const key = EXTENSION_KEY(extension.name, id);
 
-				if (serialized instanceof Blob) {
-					// Treat extension Blobs like regular Blobs
-					holes[key] = serialized;
-				} else {
-					// String data goes to extensionData
-					extensionData[key] = serialized;
-				}
+				// Extensions return strings
+				extensionData[key] = serialized;
 				return key;
 			}
 		}

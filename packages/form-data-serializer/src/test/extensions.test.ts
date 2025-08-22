@@ -103,8 +103,8 @@ describe("Extensions System", () => {
 		});
 	});
 
-	describe("Blob-returning extensions", () => {
-		test("should handle ImageData-like extension that returns Blob", () => {
+	describe("Previously Blob-returning extensions", () => {
+		test("should handle ImageData-like extension (now returns strings)", () => {
 			interface MockImageData {
 				width: number;
 				height: number;
@@ -117,27 +117,28 @@ describe("Extensions System", () => {
 				data: new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8]),
 			};
 
-			// This test demonstrates the limitation - Blob-returning extensions
-			// can't be deserialized synchronously with the current implementation
+			// Extensions now only return strings, so serialization and deserialization should work
 			const serialized = serialize(originalImageData, [mockImageDataExtension]);
-			expect(() => deserialize(serialized, [mockImageDataExtension])).toThrow(
-				"Cannot read Blob synchronously",
-			);
+			const deserialized = deserialize(serialized, [mockImageDataExtension]) as MockImageData;
+
+			expect(deserialized.width).toBe(originalImageData.width);
+			expect(deserialized.height).toBe(originalImageData.height);
+			expect(deserialized.data).toEqual(originalImageData.data);
 		});
 
-		test("should handle ArrayBuffer extension that returns Blob", () => {
+		test("should handle ArrayBuffer extension (now returns strings)", () => {
 			const originalBuffer = new ArrayBuffer(16);
 			const view = new Uint8Array(originalBuffer);
 			view.set([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]);
 
 			const serialized = serialize(originalBuffer, [mockArrayBufferExtension]);
-			// This demonstrates the limitation with Blob-returning extensions
-			expect(() => deserialize(serialized, [mockArrayBufferExtension])).toThrow(
-				"Cannot read Blob synchronously",
-			);
+			const deserialized = deserialize(serialized, [mockArrayBufferExtension]) as ArrayBuffer;
+			const deserializedView = new Uint8Array(deserialized);
+
+			expect(deserializedView).toEqual(view);
 		});
 
-		test("should handle binary data extension with Blob serialization", () => {
+		test("should handle binary data extension (now returns strings)", () => {
 			interface BinaryData {
 				type: "binary";
 				content: Uint8Array;
@@ -154,10 +155,11 @@ describe("Extensions System", () => {
 			};
 
 			const serialized = serialize(originalData, [mockBinaryDataExtension]);
-			// This demonstrates the limitation with Blob-returning extensions
-			expect(() => deserialize(serialized, [mockBinaryDataExtension])).toThrow(
-				"Cannot read Blob synchronously",
-			);
+			const deserialized = deserialize(serialized, [mockBinaryDataExtension]) as BinaryData;
+
+			expect(deserialized.type).toBe(originalData.type);
+			expect(deserialized.content).toEqual(originalData.content);
+			expect(deserialized.metadata).toEqual(originalData.metadata);
 		});
 	});
 
