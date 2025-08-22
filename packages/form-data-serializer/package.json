@@ -1,9 +1,15 @@
 {
 	"name": "form-data-serializer",
 	"version": "0.1.1",
+	"description": "A modern form data serializer with extension support",
 	"main": "dist/index.js",
 	"module": "dist/index.js",
 	"types": "dist/index.d.ts",
+	"type": "module",
+	"sideEffects": false,
+	"engines": {
+		"node": ">=16.0.0"
+	},
 	"exports": {
 		".": {
 			"import": "./dist/index.js",
@@ -12,6 +18,11 @@
 		"./extensions": {
 			"import": "./dist/extensions/index.js",
 			"types": "./dist/extensions/index.d.ts"
+		}
+	},
+	"typesVersions": {
+		"*": {
+			"extensions": ["./dist/extensions/index.d.ts"]
 		}
 	},
 	"devDependencies": {
@@ -31,6 +42,5 @@
 		"lint": "bunx biome lint",
 		"format": "bunx biome format --write",
 		"build": "bun run src/build.ts"
-	},
-	"type": "module"
+	}
 }
