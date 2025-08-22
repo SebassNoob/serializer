@@ -5,7 +5,7 @@
 		"build": {
 			"dependsOn": ["^build"],
 			"inputs": ["src/**", ".env.production", "build/**"],
-			"outputs": [".next/**", "!.next/cache/**", "dist/**"]
+			"outputs": [".next/**", "!.next/cache/**", "dist/**", "_pagefind/**", "_api/**"]
 		},
 		"start": {
 			"dependsOn": ["build"],

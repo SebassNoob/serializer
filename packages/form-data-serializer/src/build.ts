@@ -36,7 +36,7 @@ async function bundleJavaScript() {
 		entrypoints: ["src/index.ts", "src/extensions/index.ts"],
 		outdir: "dist",
 		format: "esm",
-		target: "bun",
+		target: "browser",
 		minify: true,
 		sourcemap: true,
 	});
