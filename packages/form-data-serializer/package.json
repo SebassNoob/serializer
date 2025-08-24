@@ -29,7 +29,9 @@
 	},
 	"devDependencies": {
 		"@faker-js/faker": "^9.9.0",
+		"@playwright/test": "^1.55.0",
 		"@types/bun": "latest",
+		"playwright": "^1.55.0",
 		"typedoc": "^0.28.10",
 		"typedoc-plugin-markdown": "^4.8.1"
 	},
@@ -44,5 +46,8 @@
 		"lint": "bunx biome lint",
 		"format": "bunx biome format --write",
 		"build": "bun run src/build.ts"
+	},
+	"dependencies": {
+		"uuid": "^11.1.0"
 	}
 }

@@ -130,9 +130,7 @@ export function deserialize<T extends readonly SerializationExtension<any>[]>(
 					);
 				}
 			} else {
-				throw new Error(
-					`Expected string for extension key '${key}', but got ${typeof value}`,
-				);
+				throw new Error(`Expected string for extension key '${key}', but got ${typeof value}`);
 			}
 		}
 	}

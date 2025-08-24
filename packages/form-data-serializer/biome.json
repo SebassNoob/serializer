@@ -5,6 +5,6 @@
 		"includes": ["**", "!**/node_modules/**", "!**/dist/**", "!**/test/**"]
 	},
 	"formatter": {
-		"includes": ["**", "!**/node_modules/**", "!**/dist/**", "!**/test/**"]
+		"includes": ["**", "!**/node_modules/**", "!**/dist/**"]
 	}
 }

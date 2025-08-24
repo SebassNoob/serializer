@@ -1,5 +1,4 @@
-// biome-ignore lint/style/useNodejsImportProtocol: import is necessary for browser compatibility
-import { randomUUID } from "crypto";
+import { v7 as randomUUID } from "uuid";
 import { DATA_KEY, EXTENSION_KEY, FILE_HOLE_KEY } from "./constants";
 import type { ExtractExtensionTypes, Serializable, SerializationExtension } from "./types";
 import { _validateExtensions } from "./utils";
