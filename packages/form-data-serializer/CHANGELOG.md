@@ -1,5 +1,13 @@
 # form-data-serializer
 
+## 0.1.3
+
+### Patch Changes
+
+- c5b6a24: fix: build for browser
+
+  fix: use umd compatible uuid function
+
 ## 0.1.2
 
 ### Patch Changes
