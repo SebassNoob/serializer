@@ -1,20 +1,6 @@
 import type { SerializationExtension } from "../../serialize/types";
 
-// Mock Date extension for testing
-export const mockDateExtension: SerializationExtension<Date> = {
-	name: "date",
-	serialize: (value: Date) => value.toISOString(),
-	deserialize: (value) => new Date(value as string),
-	canHandle: (value: unknown): value is Date => value instanceof Date,
-};
-
-// Mock BigInt extension for testing
-export const mockBigIntExtension: SerializationExtension<bigint> = {
-	name: "bigint",
-	serialize: (value: bigint) => value.toString(),
-	deserialize: (value) => BigInt(value as string),
-	canHandle: (value: unknown): value is bigint => typeof value === "bigint",
-};
+// (Date and BigInt handled by built-in extensions in tests)
 
 // Mock Set extension
 export const mockSetExtension: SerializationExtension<Set<string>> = {
@@ -51,32 +37,7 @@ export const mockUrlExtension: SerializationExtension<URL> = {
 	canHandle: (value: unknown): value is URL => value instanceof URL,
 };
 
-// Mock Symbol extension
-export const mockSymbolExtension: SerializationExtension<symbol> = {
-	name: "symbol",
-	serialize: (value: symbol) => value.toString(),
-	deserialize: (value) => Symbol.for(String(value).replace(/^Symbol\((.+)\)$/, "$1")),
-	canHandle: (value: unknown): value is symbol => typeof value === "symbol",
-};
-
-// Mock Error extension
-export const mockErrorExtension: SerializationExtension<Error> = {
-	name: "error",
-	serialize: (value: Error) =>
-		JSON.stringify({
-			name: value.name,
-			message: value.message,
-			stack: value.stack,
-		}),
-	deserialize: (value) => {
-		const parsed = JSON.parse(value as string);
-		const error = new Error(parsed.message);
-		error.name = parsed.name;
-		error.stack = parsed.stack;
-		return error;
-	},
-	canHandle: (value: unknown): value is Error => value instanceof Error,
-};
+// (Symbol and Error handled by built-in extensions in tests)
 
 // Mock extensions that previously returned Blobs (now return strings due to sync limitations)
 export const mockImageDataExtension: SerializationExtension<{

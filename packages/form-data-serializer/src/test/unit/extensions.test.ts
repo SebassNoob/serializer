@@ -5,13 +5,10 @@ import type { MockComplexType } from "./mocks";
 import {
 	MockPerson,
 	mockArrayBufferExtension,
-	mockBigIntExtension,
 	mockBinaryDataExtension,
 	mockComplexExtension,
-	mockDateExtension,
 	mockDuplicateExtensions,
 	mockEmptyExtension,
-	mockErrorExtension,
 	mockErrorProneExtension,
 	mockFirstDateExtension,
 	mockImageDataExtension,
@@ -22,9 +19,9 @@ import {
 	mockRegExpExtension,
 	mockSecondDateExtension,
 	mockSetExtension,
-	mockSymbolExtension,
 	mockUrlExtension,
 } from "./mocks";
+import { DateExtension, BigIntExtension, ErrorExtension, SymbolExtension } from "../../extensions";
 
 describe("Extensions System", () => {
 	beforeEach(() => {
@@ -35,8 +32,8 @@ describe("Extensions System", () => {
 		test("should handle Date extension (built-in)", () => {
 			const date = faker.date.recent();
 
-			const serialized = serialize(date, [mockDateExtension]);
-			const deserialized = deserialize(serialized, [mockDateExtension]) as Date;
+			const serialized = serialize(date, [DateExtension]);
+			const deserialized = deserialize(serialized, [DateExtension]) as Date;
 
 			expect(deserialized).toBeInstanceOf(Date);
 			expect(deserialized.getTime()).toBe(date.getTime());
@@ -45,8 +42,8 @@ describe("Extensions System", () => {
 		test("should handle BigInt extension (built-in)", () => {
 			const bigInt = BigInt(faker.number.bigInt());
 
-			const serialized = serialize(bigInt, [mockBigIntExtension]);
-			const deserialized = deserialize(serialized, [mockBigIntExtension]);
+			const serialized = serialize(bigInt, [BigIntExtension]);
+			const deserialized = deserialize(serialized, [BigIntExtension]);
 
 			expect(typeof deserialized).toBe("bigint");
 			expect(deserialized).toBe(bigInt);
@@ -194,14 +191,14 @@ describe("Extensions System", () => {
 			};
 
 			const serialized = serialize(complexObj, [
-				mockDateExtension,
-				mockBigIntExtension,
-				mockSymbolExtension,
+				DateExtension,
+				BigIntExtension,
+				SymbolExtension,
 			]);
 			const deserialized = deserialize(serialized, [
-				mockDateExtension,
-				mockBigIntExtension,
-				mockSymbolExtension,
+				DateExtension,
+				BigIntExtension,
+				SymbolExtension,
 			]) as typeof complexObj;
 
 			expect(deserialized.timestamp).toBeInstanceOf(Date);
@@ -285,8 +282,8 @@ describe("Extensions System", () => {
 			const originalError = new Error(faker.lorem.sentence());
 			originalError.name = "CustomError";
 
-			const serialized = serialize(originalError, [mockErrorExtension]);
-			const deserialized = deserialize(serialized, [mockErrorExtension]) as Error;
+			const serialized = serialize(originalError, [ErrorExtension]);
+			const deserialized = deserialize(serialized, [ErrorExtension]) as Error;
 
 			expect(deserialized).toBeInstanceOf(Error);
 			expect(deserialized.message).toBe(originalError.message);

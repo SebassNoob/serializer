@@ -30,13 +30,21 @@ async function deepEqual(
 			const bKey = (Symbol as any).keyFor ? Symbol.keyFor(b as symbol) : undefined;
 			if (aKey != null || bKey != null) {
 				if (aKey === bKey) return { equal: true };
-				return { equal: false, path: path + ".description", reason: `symbol key ${String(aKey)} !== ${String(bKey)}` };
+				return {
+					equal: false,
+					path: path + ".description",
+					reason: `symbol key ${String(aKey)} !== ${String(bKey)}`,
+				};
 			}
 			// Fall back to description-based comparison (useful for comparing serialized symbols)
 			const aDesc = (a as symbol).description;
 			const bDesc = (b as symbol).description;
 			if (aDesc === bDesc) return { equal: true };
-			return { equal: false, path: path + ".description", reason: `symbol description ${String(aDesc)} !== ${String(bDesc)}` };
+			return {
+				equal: false,
+				path: path + ".description",
+				reason: `symbol description ${String(aDesc)} !== ${String(bDesc)}`,
+			};
 		} catch (e) {
 			return { equal: false, path, reason: `symbol comparison error: ${String(e)}` };
 		}
@@ -114,7 +122,7 @@ export async function runSerialize(testName: string, payload: FormData) {
 			if (res.equal) return { ok: true } as ValidationResult;
 			return {
 				ok: false,
-				errors: [`Mismatch at ${res.path}: ${res.reason}`]
+				errors: [`Mismatch at ${res.path}: ${res.reason}`],
 			} as ValidationResult;
 		} catch (assertErr) {
 			return { ok: false, errors: [String(assertErr)] } as ValidationResult;

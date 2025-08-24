@@ -108,7 +108,9 @@ export default function Home() {
 						onChange={(e) => setInput(e.target.value)}
 						style={{ minWidth: 400 }}
 					/>
-					<button id="run-btn" type="submit">Run serializer server action</button>
+					<button id="run-btn" type="submit">
+						Run serializer server action
+					</button>
 				</div>
 				<div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
 					<label>
@@ -158,7 +160,7 @@ export default function Home() {
 				</div>
 			</form>
 
-			<pre id='result'>{output ? JSON.stringify(output, null, 2) : "No output yet"}</pre>
+			<pre id="result">{output ? JSON.stringify(output, null, 2) : "No output yet"}</pre>
 		</div>
 	);
 }

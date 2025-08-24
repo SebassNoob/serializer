@@ -42,7 +42,7 @@
 		"dist"
 	],
 	"scripts": {
-		"test": "bun test --coverage",
+		"test": "bun test --root test/unit --coverage",
 		"lint": "bunx biome lint",
 		"format": "bunx biome format --write",
 		"build": "bun run src/build.ts"

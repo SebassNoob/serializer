@@ -11,7 +11,7 @@
 		"next": "15.5.0",
 		"react": "19.1.0",
 		"react-dom": "19.1.0",
-    "form-data-serializer": "workspace:*"
+		"form-data-serializer": "workspace:*"
 	},
 	"devDependencies": {
 		"typescript": "^5",
