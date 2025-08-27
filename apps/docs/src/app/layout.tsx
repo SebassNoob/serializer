@@ -5,8 +5,13 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata = {
-	// Define your metadata here
-	// For more information on metadata API, see: https://nextjs.org/docs/app/building-your-application/optimizing/metadata
+  title: "Form Data Serializer",
+  description:
+    "Serialize complex data structures, including Dates, Errors, BigInts, Symbols, and more, into FormData for HTTP requests.",
+  icons: {
+    icon: "/favicon.ico",
+  },
+  
 };
 
 const navbar = (
@@ -15,7 +20,7 @@ const navbar = (
 		// ... Your additional navbar options
 	/>
 );
-const footer = <Footer>Built with Nextra. © SebassNoob.</Footer>;
+const footer = <Footer>Powered by Nextra. © SebassNoob.</Footer>;
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
 	return (
