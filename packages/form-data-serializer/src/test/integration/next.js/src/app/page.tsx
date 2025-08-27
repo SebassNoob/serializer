@@ -13,7 +13,11 @@ import { useEffect } from "react";
 export default function Home() {
 	useEffect(() => {
 		const w = window as unknown as {
-			__runSerialized?: (inputStr: string, tName: string, flagsObj?: Record<string, boolean>) => Promise<string>;
+			__runSerialized?: (
+				inputStr: string,
+				tName: string,
+				flagsObj?: Record<string, boolean>,
+			) => Promise<string>;
 		};
 		w.__runSerialized = async (
 			inputStr: string,
