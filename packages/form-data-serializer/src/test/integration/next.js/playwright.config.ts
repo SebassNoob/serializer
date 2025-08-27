@@ -4,8 +4,8 @@ import { defineConfig, devices } from "@playwright/test";
  * Playwright configuration for form-data-serializer integration tests
  */
 export default defineConfig({
-	// tests live in the next.js app src directory
-	testDir: "./next.js/src",
+	// tests live in the next.js app src directory (relative to this config file)
+	testDir: "./src",
 	timeout: 30 * 1000,
 	expect: {
 		timeout: 5000,
@@ -14,7 +14,7 @@ export default defineConfig({
 	forbidOnly: !!process.env.CI,
 	retries: process.env.CI ? 2 : 0,
 	workers: process.env.CI ? 1 : undefined,
-	reporter: "html",
+	reporter: "list",
 	use: {
 		baseURL: "http://localhost:3000",
 		trace: "on-first-retry",

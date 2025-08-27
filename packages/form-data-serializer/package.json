@@ -43,6 +43,7 @@
 	],
 	"scripts": {
 		"test": "bun test --root test/unit --coverage",
+		"test:integration": "bunx playwright test --config src/test/integration/next.js/playwright.config.ts",
 		"lint": "bunx biome lint",
 		"format": "bunx biome format --write",
 		"build": "bun run src/build.ts"

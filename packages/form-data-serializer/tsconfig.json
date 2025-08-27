@@ -14,5 +14,5 @@
 		}
 	},
 	"include": ["src/**/*", "_test/**/*", "build/**/*"], // Include all source files
-	"exclude": ["node_modules"] // Exclude tests and node_modules
+	"exclude": ["node_modules", "test/integration"] // Exclude tests and node_modules
 }

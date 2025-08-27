@@ -7,5 +7,5 @@
 			"@": ["./src"]
 		}
 	},
-	"include": ["src/**/*", "next-env.d.ts"]
+	"include": ["test/integration", "next-env.d.ts"]
 }
