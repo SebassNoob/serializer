@@ -1,0 +1,30 @@
+services:
+  docs:
+    container_name: form-data-serializer-docs
+    build:
+      context: .
+      dockerfile: external/docker/docs.Dockerfile
+    restart: unless-stopped
+    ports:
+      - 5432:5432
+    networks:
+      - form-data-serializer
+    
+    
+  nginx:
+    container_name: form-data-serializer-nginx
+    build: 
+      context: ./external/nginx
+      dockerfile: ./Dockerfile
+    ports:
+      - 5555:5555
+    depends_on:
+      - docs
+    networks:
+      - form-data-serializer
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+networks:
+  form-data-serializer:
+    driver: bridge

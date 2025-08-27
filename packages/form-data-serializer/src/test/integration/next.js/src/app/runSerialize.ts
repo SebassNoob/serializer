@@ -1,5 +1,5 @@
 "use server";
-import { deserialize } from "form-data-serializer";
+import { deserialize, serialize } from "form-data-serializer";
 import getCases from "../../../testCases";
 
 type ValidationResult = {
@@ -109,7 +109,7 @@ export async function runSerialize(testName: string, payload: FormData) {
 	const cases = getCases();
 	const test = cases.find((c) => c.name === testName);
 	if (!test) {
-		return { ok: false, errors: [`Test case '${testName}' not found`] } as ValidationResult;
+		return serialize({ ok: false, errors: [`Test case '${testName}' not found`] } as ValidationResult)
 	}
 
 	try {
@@ -119,15 +119,15 @@ export async function runSerialize(testName: string, payload: FormData) {
 		try {
 			console.log(value, test.input);
 			const res = await deepEqual(value, test.input);
-			if (res.equal) return { ok: true } as ValidationResult;
-			return {
+			if (res.equal) return serialize({ ok: true } as ValidationResult);
+			return serialize({
 				ok: false,
 				errors: [`Mismatch at ${res.path}: ${res.reason}`],
-			} as ValidationResult;
+			} as ValidationResult)
 		} catch (assertErr) {
-			return { ok: false, errors: [String(assertErr)] } as ValidationResult;
+			return serialize({ ok: false, errors: [String(assertErr)] } as ValidationResult)
 		}
 	} catch (err) {
-		return { ok: false, errors: [String(err)] } as ValidationResult;
+		return serialize({ ok: false, errors: [String(err)] } as ValidationResult)
 	}
 }

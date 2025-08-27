@@ -13,9 +13,17 @@ const Wrapper = getMDXComponents().wrapper;
 
 export default async function Page(props: { params: { mdxPath: string[] } }) {
 	const params = await props.params;
-	const { default: MDXContent, toc, metadata } = await importPage(params.mdxPath);
+	const page = await importPage(params.mdxPath);
+	const MDXContent = page.default;
+	const { toc, metadata } = page as any;
+	// some build-time variants include `sourceCode`; make it optional at runtime
+	// but always pass a string (fallback to empty string) because the theme
+	// wrapper expects it as a required prop in the pruned build.
+	const sourceCode = (page as any).sourceCode ?? "";
+
 	return (
-		<Wrapper toc={toc} metadata={metadata}>
+		// @ts-ignore: pass sourceCode for pruned builds where theme expects it
+		<Wrapper toc={toc} metadata={metadata} sourceCode={sourceCode}>
 			<MDXContent {...props} params={params} />
 		</Wrapper>
 	);

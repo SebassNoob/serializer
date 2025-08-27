@@ -1,5 +1,5 @@
 "use client";
-import { deserialize, serialize } from "form-data-serializer";
+import { serialize, deserialize } from "form-data-serializer";
 import { runSerialize } from "./runSerialize";
 import {
 	DateExtension,
@@ -8,12 +8,13 @@ import {
 	SymbolExtension,
 } from "form-data-serializer/extensions";
 import { useState, useReducer } from "react";
+import { TEST_INPUTS, FLAGS, RESULT } from "../constants";
 
 export default function Home() {
 	const [output, setOutput] = useState<unknown | null>(null);
 	const [input, setInput] = useState<string>("");
 	const [testName, setTestName] = useState<string>("");
-	const checkboxInitial = { date: false, bigint: false, error: false, symbol: false };
+	const checkboxInitial = Object.fromEntries(Object.values(FLAGS).map((f) => [f, false]));
 	function checkboxReducer(
 		state: typeof checkboxInitial,
 		action: { type: "toggle"; key: keyof typeof checkboxInitial; value: boolean },
@@ -33,7 +34,7 @@ export default function Home() {
 		// 1) Try strict JSON.parse (fast/common)
 		// 2) Fallback to eval('(' + input + ')') so object literals parse
 		// 3) Fallback to raw eval for any remaining JS expressions
-		let parsed: any;
+		let parsed;
 		const s = input.trim();
 		let lastErr: unknown = null;
 
@@ -64,7 +65,7 @@ export default function Home() {
 		}
 
 		// build extensions list from user selection
-		const extensions = [] as any[];
+		const extensions = [];
 		if (flags.date) extensions.push(DateExtension);
 		if (flags.bigint) extensions.push(BigIntExtension);
 		if (flags.error) extensions.push(ErrorExtension);
@@ -74,8 +75,8 @@ export default function Home() {
 		const formData = serialize(parsed, extensions);
 
 		try {
-			const result = await runSerialize(testName || "", formData as any);
-			setOutput(result);
+			const result = await runSerialize(testName || "", formData);
+			setOutput(deserialize(result));
 		} catch (err) {
 			setOutput({ ok: false, errors: [String(err)] });
 		}
@@ -96,71 +97,41 @@ export default function Home() {
 			<form onSubmit={submitHandler}>
 				<div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
 					<input
-						id="input-test-name"
+						id={TEST_INPUTS.NAME}
 						placeholder="test name"
 						value={testName}
 						onChange={(e) => setTestName(e.target.value)}
 					/>
 					<input
-						id="input-json"
+						id={TEST_INPUTS.DATA}
 						placeholder="JSON input"
 						value={input}
 						onChange={(e) => setInput(e.target.value)}
 						style={{ minWidth: 400 }}
 					/>
-					<button id="run-btn" type="submit">
+					<button id={TEST_INPUTS.RUN} type="submit">
 						Run serializer server action
 					</button>
 				</div>
 				<div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "center" }}>
-					<label>
-						<input
-							id="flag-date"
-							type="checkbox"
-							checked={flags.date}
-							onChange={(e) =>
-								dispatchFlags({ type: "toggle", key: "date", value: e.target.checked })
-							}
-						/>{" "}
-						DateExt
-					</label>
-					<label>
-						<input
-							id="flag-bigint"
-							type="checkbox"
-							checked={flags.bigint}
-							onChange={(e) =>
-								dispatchFlags({ type: "toggle", key: "bigint", value: e.target.checked })
-							}
-						/>{" "}
-						BigIntExt
-					</label>
-					<label>
-						<input
-							id="flag-error"
-							type="checkbox"
-							checked={flags.error}
-							onChange={(e) =>
-								dispatchFlags({ type: "toggle", key: "error", value: e.target.checked })
-							}
-						/>{" "}
-						ErrorExt
-					</label>
-					<label>
-						<input
-							id="flag-symbol"
-							type="checkbox"
-							checked={flags.symbol}
-							onChange={(e) =>
-								dispatchFlags({ type: "toggle", key: "symbol", value: e.target.checked })
-							}
-						/>{" "}
-						SymbolExt
-					</label>
+					{Object.values(FLAGS).map((f) => (
+						<label key={f}>
+							<input
+								id={f}
+								type="checkbox"
+								checked={flags[f]}
+								onChange={(e) => dispatchFlags({ type: "toggle", key: f, value: e.target.checked })}
+							/>{" "}
+							{f.replace("flag-", "").replace(/^\w/, (c) => c.toUpperCase())}Ext
+						</label>
+					))}
 				</div>
 			</form>
-
-			<pre id="result">{output ? JSON.stringify(output, null, 2) : "No output yet"}</pre>
+			{output ? (
+				<pre id={RESULT.RESOLVED}>{JSON.stringify(output, null, 2)}</pre>
+			) : (
+				<pre id={RESULT.UNRESOLVED}>No output yet</pre>
+			)}
 		</div>
 	);
 }

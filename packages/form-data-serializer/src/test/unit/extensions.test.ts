@@ -190,11 +190,7 @@ describe("Extensions System", () => {
 				},
 			};
 
-			const serialized = serialize(complexObj, [
-				DateExtension,
-				BigIntExtension,
-				SymbolExtension,
-			]);
+			const serialized = serialize(complexObj, [DateExtension, BigIntExtension, SymbolExtension]);
 			const deserialized = deserialize(serialized, [
 				DateExtension,
 				BigIntExtension,
