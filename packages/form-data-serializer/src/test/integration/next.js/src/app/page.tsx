@@ -12,7 +12,10 @@ import { useEffect } from "react";
 // Minimal test-only page: register a programmatic helper used by the Playwright tests.
 export default function Home() {
 	useEffect(() => {
-		(window as any).__runSerialized = async (
+		const w = window as unknown as {
+			__runSerialized?: (inputStr: string, tName: string, flagsObj?: Record<string, boolean>) => Promise<string>;
+		};
+		w.__runSerialized = async (
 			inputStr: string,
 			tName: string,
 			flagsObj?: Record<string, boolean>,
@@ -51,16 +54,22 @@ export default function Home() {
 
 			try {
 				// Build client-side extension objects for local serialize/deserialize
-				const extMap: Record<string, any> = {
+				// Use unknown for the runtime extension objects; we add a focused
+				// @ts-ignore around the runtime serialize/deserialize calls below.
+				const extMap: Record<string, unknown> = {
 					date: DateExtension,
 					bigint: BigIntExtension,
 					error: ErrorExtension,
 					symbol: SymbolExtension,
 				};
-				const clientExtensions = extensionNames.map((n) => extMap[n]).filter(Boolean);
+				const clientExtensions = extensionNames.map((n) => extMap[n]).filter(Boolean) as unknown[];
 
-				const fd = serialize(parsed as any, clientExtensions as any);
-				const res = await runSerialize(tName || "", fd, extensionNames as any);
+				// runtime: pass unknown runtime-built extension objects into the
+				// serialization helpers. These calls are verified at runtime by tests.
+				// @ts-ignore - runtime-built extensions and unknown parsed value
+				const fd = serialize(parsed, clientExtensions as any);
+				const res = await runSerialize(tName || "", fd, extensionNames);
+				// @ts-ignore - runtime-built extensions
 				const out = deserialize(res as any, clientExtensions as any);
 				return JSON.stringify(out, (_k, v) => (typeof v === "bigint" ? `${v.toString()}n` : v));
 			} catch (err) {

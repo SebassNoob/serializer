@@ -1,0 +1,15 @@
+{
+	"name": "hono",
+	"version": "0.1.0",
+	"private": true,
+	"scripts": {
+		"dev": "bun run src/server.ts"
+	},
+	"dependencies": {
+		"hono": "^4",
+		"form-data-serializer": "workspace:*"
+	},
+	"devDependencies": {
+		"typescript": "^5"
+	}
+}

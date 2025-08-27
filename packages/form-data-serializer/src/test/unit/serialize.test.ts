@@ -50,7 +50,9 @@ describe("serialize", () => {
 		});
 
 		test("should throw error for undefined", () => {
-			expect(() => serialize(undefined as any)).toThrow("Cannot serialize undefined value");
+			// Passing undefined intentionally to assert error behavior
+			// @ts-ignore - test intentionally passes undefined (runtime assertion)
+			expect(() => serialize(undefined)).toThrow("Cannot serialize undefined value");
 		});
 	});
 
@@ -97,7 +99,9 @@ describe("serialize", () => {
 				email: obj.email,
 			};
 
-			const result = serialize(obj as any);
+			// allow omitted-undefined object in test
+			// @ts-ignore - test input intentionally contains undefined (we assert omission behavior)
+			const result = serialize(obj);
 			expect(result.get(DATA_KEY)).toBe(JSON.stringify(expected));
 		});
 

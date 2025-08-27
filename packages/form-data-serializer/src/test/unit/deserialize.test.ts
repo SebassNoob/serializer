@@ -112,7 +112,9 @@ describe("deserialize", () => {
 				email: obj.email,
 			};
 
-			const serialized = serialize(obj as any);
+			// object contains an intentionally undefined property which is omitted by
+			// the serializer; cast to unknown to avoid broad `as any`.
+			const serialized = serialize(obj as unknown as Record<string, unknown>);
 			const result = deserialize(serialized);
 
 			expect(result).toEqual(expected);
@@ -471,7 +473,10 @@ describe("deserialize", () => {
 				canHandle: () => false,
 			};
 
-			expect(() => deserialize(new FormData(), [invalidExtension as any])).toThrow(
+			// Test intentionally provides an invalid extension shape; suppress
+			// TypeScript error for the test input only.
+			// @ts-ignore - intentionally passing an invalid extension object
+			expect(() => deserialize(new FormData(), [invalidExtension])).toThrow(
 				"Extension name 'test:invalid' cannot contain colon (:) character",
 			);
 		});
@@ -488,8 +493,10 @@ describe("deserialize", () => {
 			};
 
 			const _originalEntries = formData.entries.bind(formData);
+			// @ts-ignore - intentionally yield a non-string value to simulate malformed FormData
 			formData.entries = function* () {
 				yield [DATA_KEY, JSON.stringify("$ref:test-id")];
+				// simulate malformed FormData where an entry is present but null;
 				yield ["$ref:test-id", null as any];
 			};
 

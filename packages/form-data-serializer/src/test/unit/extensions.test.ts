@@ -262,12 +262,15 @@ describe("Extensions System", () => {
 
 		test("should validate extension names and throw appropriate errors", () => {
 			mockInvalidExtensions.forEach((ext) => {
-				expect(() => serialize({}, [ext as any])).toThrow();
+				// @ts-ignore - intentionally testing invalid extension shapes
+				expect(() => serialize({}, [ext])).toThrow();
 			});
 		});
 
 		test("should handle duplicate extension names", () => {
-			expect(() => serialize({}, mockDuplicateExtensions as any)).toThrow(
+			// @ts-ignore - mockDuplicateExtensions intentionally contains duplicates with
+			// an invalid shape for the test
+			expect(() => serialize({}, mockDuplicateExtensions)).toThrow(
 				"Duplicate extension name found: 'duplicate'",
 			);
 		});

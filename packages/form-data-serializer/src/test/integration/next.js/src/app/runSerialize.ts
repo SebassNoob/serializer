@@ -7,7 +7,7 @@ import {
 	SymbolExtension,
 } from "form-data-serializer/extensions";
 
-const EXT_MAP: Record<string, any> = {
+const EXT_MAP: Record<string, unknown> = {
 	date: DateExtension,
 	bigint: BigIntExtension,
 	error: ErrorExtension,
@@ -22,8 +22,11 @@ export async function runSerialize(
 ) {
 	try {
 		const extensions = (extensionNames ?? []).map((n) => EXT_MAP[n]).filter(Boolean);
-		const value = deserialize(payload, extensions as any);
-		return serialize({ ok: true, value } as any, extensions as any);
+		// runtime: EXT_MAP contains extension objects; TS typing here is intentionally loose
+		// @ts-ignore - passing runtime-built extensions into serializer/deserializer
+		const value = deserialize(payload, extensions);
+		// @ts-ignore - serialize accepts the same runtime-built extensions
+		return serialize({ ok: true, value }, extensions);
 	} catch (err) {
 		// ensure error serializable
 		return serialize({ ok: false, errors: [String(err)] } as any, []);
