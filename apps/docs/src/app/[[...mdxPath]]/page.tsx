@@ -14,17 +14,14 @@ const Wrapper = getMDXComponents().wrapper;
 export default async function Page(props: { params: { mdxPath: string[] } }) {
 	const params = await props.params;
 	const page = await importPage(params.mdxPath);
-	const MDXContent = page.default;
-	const { toc, metadata } = page;
-	// some build-time variants include `sourceCode`; make it optional at runtime
-	// but always pass a string (fallback to empty string) because the theme
-	// wrapper expects it as a required prop in the pruned build.
-  // biome-ignore lint/suspicious/noExplicitAny: see below
-	const sourceCode = (page as any).sourceCode ?? "";
+	const { default: MDXContent, toc, metadata } = page;
+
+  // ????
+	const wrapperProps = { toc, metadata };
 
 	return (
-		// @ts-expect-error: pass sourceCode for pruned builds where theme expects it
-		<Wrapper toc={toc} metadata={metadata} sourceCode={sourceCode}>
+    // @ts-expect-error: wtf is nextra doing here ??
+		<Wrapper {...wrapperProps} sourcecode={(page as any).sourceCode}>
 			<MDXContent {...props} params={params} />
 		</Wrapper>
 	);

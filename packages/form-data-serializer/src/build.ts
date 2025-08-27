@@ -56,7 +56,14 @@ function generateTypeScriptDeclarations() {
 }
 
 function generateDocumentation() {
-	const typedocResult = spawnSync(["bunx", "typedoc", "--options", "typedoc.config.mjs"]);
+	const typedocResult = spawnSync([
+		"bunx",
+		"typedoc",
+		"--options",
+		"typedoc.config.mjs",
+		"--tsconfig",
+		"tsconfig.build.json",
+	]);
 
 	if (typedocResult.exitCode !== 0) {
 		const errorMsg = typedocResult.stderr

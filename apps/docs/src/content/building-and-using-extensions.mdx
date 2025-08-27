@@ -23,7 +23,7 @@ export default dateExtension;
 
 You must implement the following properties in your custom serializer:
 
-- `name`: A unique name for your extension. This will be used internally with `$ext:\_name\_:\_uuid\_` as the key to identify your serialized data.
+- `name`: A unique name for your extension. This will be used internally with `$ext:_name_:_uuid_` as the key to identify your serialized data.
 - `canHandle`: A function that checks if the value can be handled by this extension. It should return `true` if the value is of the type this extension handles.
 - `serialize`: A function that converts the value to a string representation, since `FormData` with extensions only supports string serialization for synchronous operation.
 - `deserialize`: A function that converts the serialized string back to the original value type.

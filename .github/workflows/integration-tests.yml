@@ -1,0 +1,39 @@
+name: Integration tests (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Path to package to run integration tests from'
+        required: false
+        default: 'packages/form-data-serializer'
+
+jobs:
+  integration:
+    name: Run integration tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install package dependencies (Bun)
+        working-directory: ${{ github.event.inputs.package }}
+        run: |
+          bun install
+
+      - name: Install Playwright browsers
+        working-directory: ${{ github.event.inputs.package }}
+        run: |
+          bunx playwright install --with-deps
+
+      - name: Run integration tests
+        working-directory: ${{ github.event.inputs.package }}
+        env:
+          CI: true
+        run: |
+          bun run test:integration
