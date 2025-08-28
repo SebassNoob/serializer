@@ -31,4 +31,4 @@ COPY --from=builder /usr/local/apps/docs .
 COPY --from=builder /usr/local/node_modules ./node_modules
 RUN rm -rf .turbo src
 
-CMD ["bun", "--bun", "run", "start", "-p", "5432"]
+CMD ["bun", "--bun", "run", "start", "-p", "9333"]

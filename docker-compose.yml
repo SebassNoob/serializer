@@ -6,7 +6,7 @@ services:
       dockerfile: external/docker/docs.Dockerfile
     restart: unless-stopped
     ports:
-      - 5432:5432
+      - 9333:9333
     networks:
       - form-data-serializer
     
@@ -17,7 +17,7 @@ services:
       context: ./external/nginx
       dockerfile: ./Dockerfile
     ports:
-      - 5555:5555
+      - 9334:9334
     depends_on:
       - docs
     networks:
