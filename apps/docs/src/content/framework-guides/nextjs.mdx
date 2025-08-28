@@ -1,0 +1,208 @@
+# Next.js
+
+Next.js is a popular React framework for building SSR (Server-Side Rendering).
+
+In particular, Next.js (app router) provides built in support for server functions and API routes, which are ways to define server-side logic in your application. 
+This guide will show you how to use `form-data-serializer` with both of these features.
+
+## Using with Server Functions (Next 13.4+)
+
+Server functions (actions) defines a server-side route that can be called from the client. 
+Read about [Server Functions](https://react.dev/reference/rsc/server-functions) in the React docs.
+
+To use `form-data-serializer` in a server function, you can import it and use it to perform network requests.
+
+Here's an example of how to use `form-data-serializer` in a server function:
+
+```tsx
+// components/CatForm.tsx
+'use client';
+import { useState } from 'react';
+import { saveCatData } from './actions';
+import { serialize } from 'form-data-serializer';
+
+export default function CatForm() {
+  const [name, setName] = useState<string>('');
+  const [age, setAge] = useState<string>('');
+  const [image, setImage] = useState<File | null>(null);
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // for example, data = FormData { $data -> { name: 'paws'; age: 13; image: '$ref:abc-def-ghi' }, $ref:abc-def-ghi -> File }
+    const data = serialize({ name, age: Number(age), image });
+
+    const result = await saveCatData(data);
+    if (result.ok) {
+      // handle success
+    } else {
+      // handle error
+    }
+  };
+
+  return (
+    <form action={saveCatData}>
+      <input
+        type="text"
+        name="name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Cat Name"
+      />
+      <input
+        type="number"
+        name="age"
+        value={age}
+        onChange={(e) => setAge(e.target.value)}
+        placeholder="Cat Age"
+      />
+      <input type='file' name='image' onChange={(e) => setImage(e.target.files[0])} />
+      <button type="submit">Save Cat</button>
+    </form>
+  );
+}
+```
+
+
+```ts
+// app/actions.ts
+'use server';
+import { deserialize } from 'form-data-serializer';
+import { revalidatePath } from 'next/cache';
+import { db, imageUploadToStorage } from '@lib/db'; // your database client
+import { validate } from '@lib/validate'; // your validation logic
+
+export async function saveCatData(formData: FormData) {
+  // perform authentication/authorization here...
+
+  // using example from earlier, formData = FormData { $data -> { name: 'paws'; age: 13; image: '$ref:abc-def-ghi' }, $ref:abc-def-ghi -> File }
+  // after deserialization, data = { name: 'paws'; age: 13; image: File }
+  const data: Record<string, unknown> = deserialize(formData);
+
+  // perform validation on data here...
+  // for example, ensure data.name is a string, data.age is a number, data.image is a File, etc.
+  const validatedData = validate(data); // implement your own validation logic
+  
+  // save data to database here...
+  const imageUrl = await imageUploadToStorage(validatedData.image); // upload image to storage service
+  await db.cat.create({ ...validatedData, image: imageUrl }); // save cat data to database
+
+  // optionally, revalidate any paths that display the new data
+  revalidatePath('/cats');
+  return { ok: true };
+}
+```
+
+<br/>
+
+<Callout type="info" title="Good to Know">
+  Normally, you cannot upload files directly via json payloads as javascript does not support serialization of `File` objects.
+  The typical workaround is to use `FormData` to upload files, and you would have to manually construct the `FormData` object and append fields to it.
+
+  For example:
+  ```ts
+  const formData = new FormData();
+  formData.append('name', name);
+  formData.append('age', age.toString());
+  formData.append('image', imageFile);
+  const response = await fetch('/api/save-cat', {
+    method: 'POST',
+    body: formData,
+  });
+  ```
+  Then you would send this `formData` object in a `fetch` request and deserialize it on the server, repeating the same logic as above.
+
+  `form-data-serializer` simplifies this process by allowing you to serialize a regular object (with `File` objects) into a `FormData` object automatically.
+  This is especially useful in frameworks like Next.js where you can use server functions to handle form submissions directly.
+</Callout>
+
+
+## Using with API Routes
+
+API routes in Next.js allow you to create backend endpoints within your Next.js application.
+You can use `form-data-serializer` in an API route to handle form submissions that include file uploads.
+
+This is similar to using server functions, but instead of defining a server function, you define an API route handler.
+
+Here's an example of how to use `form-data-serializer` in an API route:
+
+```tsx
+// components/CatForm.tsx
+'use client';
+import { useState } from 'react';
+import { serialize } from 'form-data-serializer';
+import { useRouter } from 'next/navigation';
+
+export default function CatForm() {
+  const [name, setName] = useState<string>('');
+  const [age, setAge] = useState<string>('');
+  const [image, setImage] = useState<File | null>(null);
+  const router = useRouter();
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // for example, data = FormData { $data -> { name: 'paws'; age: 13; image: '$ref:abc-def-ghi' }, $ref:abc-def-ghi -> File }
+    const data = serialize({ name, age: Number(age), image });
+
+    const response = await fetch('/api/save-cat', {
+      method: 'POST',
+      body: data,
+    });
+
+    if (response.ok) {
+      // handle success
+      router.refresh(); // refresh the page or navigate as needed
+    } else {
+      // handle error
+    }
+  };
+
+  return (
+    <form onSubmit={onSubmit}>
+      <input
+        type="text"
+        name="name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Cat Name"
+      />
+      <input
+        type="number"
+        name="age"
+        value={age}
+        onChange={(e) => setAge(e.target.value)}
+        placeholder="Cat Age"
+      />
+      <input type='file' name='image' onChange={(e) => setImage(e.target.files[0])} />
+      <button type="submit">Save Cat</button>
+    </form>
+  );
+}
+```
+
+```ts
+// app/api/route.ts
+import { deserialize } from 'form-data-serializer';
+import { db, imageUploadToStorage } from '@lib/db'; // your database client
+import { validate } from '@lib/validate'; // your validation logic
+
+export async function POST(request: Request) {
+  // perform authentication/authorization here...
+
+  const formData = await request.formData();
+  // using example from earlier, formData = FormData { $data -> { name: 'paws'; age: 13; image: '$ref:abc-def-ghi' }, $ref:abc-def-ghi -> File }
+  // after deserialization, data = { name: 'paws'; age: 13; image: File }
+  const data: Record<string, unknown> = deserialize(formData);
+
+  // perform validation on data here...
+  // for example, ensure data.name is a string, data.age is a number, data.image is a File, etc.
+  const validatedData = validate(data); // implement your own validation logic
+  
+  // save data to database here...
+  const imageUrl = await imageUploadToStorage(validatedData.image); // upload image to storage service
+  await db.cat.create({ ...validatedData, image: imageUrl }); // save cat data to database
+
+  return new Response(JSON.stringify({ ok: true }), { status: 200 } );
+}
+```
