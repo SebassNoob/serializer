@@ -1,1 +1,114 @@
 # Hono
+
+Hono is a minimal web server framework for Node.js. You can use `form-data-serializer` with Hono to handle `multipart/form-data` requests.
+
+## Client: plain HTML + script (ESM) using serialize()
+
+The HTML below demonstrates how to build a JS object that includes a `File` from a file input, call `serialize()` to convert the object into a `FormData`, and POST the `FormData` to `/api/save-cat`.
+
+```html
+<!-- public/cat-form.html -->
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Save a Cat (serialize demo)</title>
+	</head>
+	<body>
+		<h1>Save a Cat</h1>
+		<form id="catForm">
+			<input type="text" name="name" placeholder="Cat Name" required />
+			<input type="number" name="age" placeholder="Cat Age" required />
+			<input type="file" name="image" />
+			<button type="submit">Save Cat</button>
+		</form>
+
+		<script type="module">
+			// In an app, import serialize from the package. For a quick demo you
+			// might bundle form-data-serializer for the browser or expose it via ESM.
+			import { serialize } from 'form-data-serializer';
+
+			const form = document.getElementById('catForm');
+
+			form.addEventListener('submit', async (e) => {
+				e.preventDefault();
+
+				// Gather values from the form
+				const name = form.elements.name.value;
+				const age = Number(form.elements.age.value);
+				const image = form.elements.image.files[0] || null;
+
+				// Build a plain JS object containing Files and primitive values.
+				// serialize() will convert this into a proper FormData that preserves
+				// file content and encodes nested objects/refs if necessary.
+				const payloadObj = { name, age, image };
+				const formData = serialize(payloadObj);
+
+				// Send the serialized FormData to the server. This produces a
+				// multipart/form-data request with file parts included.
+				const res = await fetch('/api/save-cat', {
+					method: 'POST',
+					body: formData,
+				});
+
+				if (res.ok) {
+					console.log('Cat saved');
+				} else {
+					console.error('Save failed', await res.text());
+				}
+			});
+		</script>
+	</body>
+</html>
+```
+
+## Server: Hono example (no multipart libraries)
+
+If you prefer not to add multipart parsing libraries, use a runtime and framework that expose the Web Fetch API's `Request.formData()` and `File` objects. `Hono` is a tiny framework that runs on many JS runtimes (Cloudflare Workers, Bun, Deno, Node with proper globals). When the runtime supports `formData()` and `File`, you can call `deserialize()` directly on the `FormData` returned by the request — no external multipart parser required.
+
+Install only `hono` in your project (and `form-data-serializer` which the docs already cover):
+
+	npm install hono form-data-serializer
+
+Example Hono server (ESM):
+
+```js
+// apps/docs/server/hono-server.mjs
+import { Hono } from 'hono';
+import { deserialize } from 'form-data-serializer';
+
+const app = new Hono();
+
+app.post('/api/save-cat', async (c) => {
+	const req = c.req; // Web Request
+
+	const contentType = req.headers.get('content-type') || '';
+	if (!contentType.includes('multipart/')) {
+		return c.json({ ok: false, message: 'Expected multipart/form-data' }, 400);
+	}
+
+	// Rely on the runtime to provide Request.formData() which returns
+	// a FormData whose file entries are platform File objects.
+	const formData = await req.formData();
+
+	// deserialize accepts a FormData and returns the original JS shape
+	// produced by serialize() on the client (including File objects).
+	const data = deserialize(formData);
+
+	// data example: { name: 'paws', age: 3, image: File }
+	return c.json({ ok: true, received: { name: data.name, hasImage: !!data.image } });
+});
+
+// If you run this in Node, ensure your Node runtime exposes Web FormData/File
+// (newer Node versions with experimental fetch globals or using Bun/Deno will work).
+const port = process.env.PORT || 3001;
+app.listen(port, () => console.log(`Hono server listening on http://localhost:${port}`));
+```
+
+Notes
+- This approach avoids adding `multer`, `busboy`, or `formidable` by depending on the runtime's native support for form parsing. It works well on Cloudflare Workers, Bun, Deno, and Node when the Fetch/FormData/File globals are available.
+- If you run on plain Node without FormData/File globals, you can either polyfill those primitives (for example with `formdata-node`) or fall back to a small multipart parser. Using a runtime with built-in FormData support is the simplest path.
+
+Summary
+- Client: use `serialize()` in the browser to send a multipart/form-data request.
+- Server: with Hono on a runtime that supports `Request.formData()`, call `deserialize(formData)` directly and recover the original object with File instances — no extra multipart libraries required.

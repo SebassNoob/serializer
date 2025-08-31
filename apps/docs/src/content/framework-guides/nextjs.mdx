@@ -12,6 +12,7 @@ Read about [Server Functions](https://react.dev/reference/rsc/server-functions) 
 
 To use `form-data-serializer` in a server function, you can import it and use it to perform network requests.
 
+### Example
 Here's an example of how to use `form-data-serializer` in a server function:
 
 ```tsx
@@ -124,6 +125,7 @@ You can use `form-data-serializer` in an API route to handle form submissions th
 
 This is similar to using server functions, but instead of defining a server function, you define an API route handler.
 
+### Example
 Here's an example of how to use `form-data-serializer` in an API route:
 
 ```tsx
@@ -182,7 +184,7 @@ export default function CatForm() {
 ```
 
 ```ts
-// app/api/route.ts
+// app/api/save-cat/route.ts
 import { deserialize } from 'form-data-serializer';
 import { db, imageUploadToStorage } from '@lib/db'; // your database client
 import { validate } from '@lib/validate'; // your validation logic
