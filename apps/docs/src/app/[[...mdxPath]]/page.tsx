@@ -16,11 +16,11 @@ export default async function Page(props: { params: { mdxPath: string[] } }) {
 	const page = await importPage(params.mdxPath);
 	const { default: MDXContent, toc, metadata } = page;
 
-  // ????
+	// ????
 	const wrapperProps = { toc, metadata };
 
 	return (
-    // @ts-expect-error: wtf is nextra doing here ??
+		// @ts-expect-error: wtf is nextra doing here ??
 		<Wrapper {...wrapperProps} sourcecode={(page as any).sourceCode}>
 			<MDXContent {...props} params={params} />
 		</Wrapper>

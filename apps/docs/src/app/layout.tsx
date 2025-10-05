@@ -5,13 +5,12 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata = {
-  title: "Form Data Serializer",
-  description:
-    "Serialize complex data structures, including Dates, Errors, BigInts, Symbols, and more, into FormData for HTTP requests.",
-  icons: {
-    icon: "/favicon.ico",
-  },
-  
+	title: "Form Data Serializer",
+	description:
+		"Serialize complex data structures, including Dates, Errors, BigInts, Symbols, and more, into FormData for HTTP requests.",
+	icons: {
+		icon: "/favicon.ico",
+	},
 };
 
 const navbar = (

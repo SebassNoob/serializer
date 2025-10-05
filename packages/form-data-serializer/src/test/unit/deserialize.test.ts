@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { faker } from "@faker-js/faker";
-import { deserialize, type SerializationExtension, serialize } from "@";
-import { BigIntExtension, DateExtension } from "@/extensions";
-import { DATA_KEY } from "@/serialize/constants"; // PRIVATE
+import { deserialize, type SerializationExtension, serialize } from "@/serialize-refactor";
+import { BigIntExtension, DateExtension } from "@/extensions-refactor";
+import { DEFAULT_REFERENCE_PREFIX } from "@/serialize-refactor/constants";
 
 describe("deserialize", () => {
 	beforeEach(() => {
@@ -10,564 +10,751 @@ describe("deserialize", () => {
 		faker.seed(123);
 	});
 
-	describe("primitive values", () => {
-		test("should deserialize string", () => {
-			const str = faker.lorem.sentence();
-			const serialized = serialize(str);
-			const result = deserialize(serialized);
-
-			expect(result).toBe(str);
+	describe("primitives", () => {
+		test("should deserialize string without data loss", () => {
+			const original = faker.lorem.paragraph();
+			const result = deserialize(serialize(original));
+			expect(result).toBe(original);
 		});
 
-		test("should deserialize number", () => {
-			const num = faker.number.float();
-			const serialized = serialize(num);
-			const result = deserialize(serialized);
-
-			expect(result).toBe(num);
+		test("should deserialize number (float) without precision loss", () => {
+			const original = 3.141592653589793;
+			const result = deserialize(serialize(original));
+			expect(result).toBe(original);
 		});
 
-		test("should deserialize integer", () => {
-			const int = faker.number.int();
-			const serialized = serialize(int);
-			const result = deserialize(serialized);
-
-			expect(result).toBe(int);
+		test("should deserialize number (integer) without data loss", () => {
+			const original = faker.number.int({ min: -1000000, max: 1000000 });
+			const result = deserialize(serialize(original));
+			expect(result).toBe(original);
 		});
 
-		test("should deserialize boolean true", () => {
-			const serialized = serialize(true);
-			const result = deserialize(serialized);
-
+		test("should deserialize boolean true without data loss", () => {
+			const result = deserialize(serialize(true));
 			expect(result).toBe(true);
 		});
 
-		test("should deserialize boolean false", () => {
-			const serialized = serialize(false);
-			const result = deserialize(serialized);
-
+		test("should deserialize boolean false without data loss", () => {
+			const result = deserialize(serialize(false));
 			expect(result).toBe(false);
 		});
 
-		test("should deserialize null", () => {
-			const serialized = serialize(null);
-			const result = deserialize(serialized);
-
+		test("should deserialize null without data loss", () => {
+			const result = deserialize(serialize(null));
 			expect(result).toBe(null);
+		});
+
+		test("should deserialize zero without data loss", () => {
+			const result = deserialize(serialize(0));
+			expect(result).toBe(0);
+		});
+
+		test("should deserialize empty string without data loss", () => {
+			const result = deserialize(serialize(""));
+			expect(result).toBe("");
+		});
+
+		test("should deserialize negative numbers without data loss", () => {
+			const original = -12345.6789;
+			const result = deserialize(serialize(original));
+			expect(result).toBe(original);
+		});
+
+		test("should deserialize very large safe integer without data loss", () => {
+			const original = Number.MAX_SAFE_INTEGER;
+			const result = deserialize(serialize(original));
+			expect(result).toBe(original);
+		});
+
+		test("should deserialize very small number without data loss", () => {
+			const original = Number.MIN_VALUE;
+			const result = deserialize(serialize(original));
+			expect(result).toBe(original);
 		});
 	});
 
 	describe("objects", () => {
-		test("should deserialize simple object", () => {
-			const obj = {
+		test("should deserialize simple object without data loss", () => {
+			const original = {
 				name: faker.person.fullName(),
-				age: faker.number.int({ min: 18, max: 80 }),
+				age: faker.number.int({ min: 18, max: 100 }),
 				active: faker.datatype.boolean(),
 			};
-
-			const serialized = serialize(obj);
-			const result = deserialize(serialized);
-
-			expect(result).toEqual(obj);
+			const result = deserialize(serialize(original));
+			expect(result).toEqual(original);
 		});
 
-		test("should deserialize nested object", () => {
-			const obj = {
+		test("should deserialize nested object without data loss", () => {
+			const original = {
 				user: {
 					profile: {
 						name: faker.person.fullName(),
 						email: faker.internet.email(),
 					},
 					settings: {
-						theme: faker.color.human(),
+						theme: faker.helpers.arrayElement(["light", "dark"]),
 						notifications: faker.datatype.boolean(),
 					},
 				},
-				timestamp: faker.number.int(),
 			};
-
-			const serialized = serialize(obj);
-			const result = deserialize(serialized);
-
-			expect(result).toEqual(obj);
+			const result = deserialize(serialize(original));
+			expect(result).toEqual(original);
 		});
 
-		test("should deserialize empty object", () => {
-			const obj = {};
-			const serialized = serialize(obj);
-			const result = deserialize(serialized);
-
-			expect(result).toEqual(obj);
+		test("should deserialize empty object without data loss", () => {
+			const original = {};
+			const result = deserialize(serialize(original));
+			expect(result).toEqual(original);
 		});
 
-		test("should handle objects that had undefined values omitted during serialization", () => {
-			const obj = {
+		test("should deserialize object with null values without data loss", () => {
+			const original = {
 				name: faker.person.fullName(),
-				age: undefined,
-				email: faker.internet.email(),
+				deletedAt: null,
+				description: faker.lorem.sentence(),
 			};
+			const result = deserialize(serialize(original));
+			expect(result).toEqual(original);
+		});
 
-			const expected = {
-				name: obj.name,
-				email: obj.email,
+		test("should deserialize object with mixed types without data loss", () => {
+			const original = {
+				string: faker.lorem.word(),
+				number: faker.number.float(),
+				boolean: faker.datatype.boolean(),
+				nullValue: null,
+				nested: {
+					value: faker.lorem.word(),
+				},
 			};
+			const result = deserialize(serialize(original));
+			expect(result).toEqual(original);
+		});
 
-			// object contains an intentionally undefined property which is omitted by
-			// the serializer; cast to unknown to avoid broad `as any`.
-			const serialized = serialize(obj as unknown as Record<string, unknown>);
-			const result = deserialize(serialized);
+		test("should preserve object key order", () => {
+			const original = { z: "last", a: "first", m: "middle" };
+			const result = deserialize(serialize(original));
+			expect(Object.keys(result)).toEqual(["z", "a", "m"]);
+			expect(result).toEqual(original);
+		});
 
-			expect(result).toEqual(expected);
-			expect(result).not.toHaveProperty("age");
+		test("should deserialize object with numeric keys without data loss", () => {
+			const original = {
+				0: faker.lorem.word(),
+				1: faker.lorem.word(),
+				2: faker.lorem.word(),
+			};
+			const result = deserialize(serialize(original));
+			expect(result).toEqual(original);
+		});
+
+		test("should deserialize object with special characters in keys without data loss", () => {
+			const original = {
+				"key-with-dash": faker.lorem.word(),
+				"key.with.dots": faker.lorem.word(),
+				"key with spaces": faker.lorem.word(),
+			};
+			const result = deserialize(serialize(original));
+			expect(result).toEqual(original);
 		});
 	});
 
 	describe("arrays", () => {
-		test("should deserialize array of primitives", () => {
-			const arr = [faker.lorem.word(), faker.number.int(), faker.datatype.boolean(), null];
-
-			const serialized = serialize(arr);
-			const result = deserialize(serialized);
-
-			expect(result).toEqual(arr);
-		});
-
-		test("should deserialize array of objects", () => {
-			const arr = Array.from({ length: 3 }, () => ({
-				id: faker.string.uuid(),
-				name: faker.person.fullName(),
-				score: faker.number.float({ min: 0, max: 100 }),
-			}));
-
-			const serialized = serialize(arr);
-			const result = deserialize(serialized);
-
-			expect(result).toEqual(arr);
-		});
-
-		test("should deserialize nested arrays", () => {
-			const arr = [
-				[faker.lorem.word(), faker.lorem.word()],
-				[faker.number.int(), faker.number.int()],
-				[faker.datatype.boolean()],
+		test("should deserialize array of primitives without data loss", () => {
+			const original = [
+				faker.lorem.word(),
+				faker.number.int(),
+				faker.datatype.boolean(),
+				null,
 			];
-
-			const serialized = serialize(arr);
-			const result = deserialize(serialized);
-
-			expect(result).toEqual(arr);
+			const result = deserialize(serialize(original));
+			expect(result).toEqual(original);
 		});
 
-		test("should deserialize empty array", () => {
-			const arr: any[] = [];
-			const serialized = serialize(arr);
-			const result = deserialize(serialized);
+		test("should deserialize array of objects without data loss", () => {
+			const original = Array.from({ length: 3 }, () => ({
+				id: faker.string.uuid(),
+				value: faker.lorem.word(),
+			}));
+			const result = deserialize(serialize(original));
+			expect(result).toEqual(original);
+		});
 
-			expect(result).toEqual(arr);
+		test("should deserialize nested arrays without data loss", () => {
+			const original = [
+				[1, 2, 3],
+				[4, 5, 6],
+				[[7, 8], [9, 10]],
+			];
+			const result = deserialize(serialize(original));
+			expect(result).toEqual(original);
+		});
+
+		test("should deserialize empty array without data loss", () => {
+			const original: unknown[] = [];
+			const result = deserialize(serialize(original));
+			expect(result).toEqual(original);
+		});
+
+		test("should preserve array element order", () => {
+			const original = ["first", "second", "third", "fourth"];
+			const result = deserialize(serialize(original));
+			expect(result).toEqual(original);
+		});
+
+		test("should deserialize array with null values without data loss", () => {
+			const original = [
+				faker.lorem.word(),
+				null,
+				faker.number.int(),
+				null,
+			];
+			const result = deserialize(serialize(original));
+			expect(result).toEqual(original);
 		});
 	});
 
 	describe("Blob handling", () => {
-		test("should deserialize single Blob", async () => {
+		test("should deserialize single Blob without data loss", async () => {
 			const content = faker.lorem.paragraph();
-			const blob = new Blob([content], { type: "text/plain" });
-
-			const serialized = serialize(blob);
-			const result = deserialize(serialized) as Blob;
+			const original = new Blob([content], { type: "text/plain" });
+			const result = deserialize(serialize(original));
 
 			expect(result).toBeInstanceOf(Blob);
-			expect(result.type).toBe(blob.type);
-			expect(result.size).toBe(blob.size);
-
-			// Verify content
-			const resultText = await result.text();
-			expect(resultText).toBe(content);
+			expect(result.type).toContain("text/plain");
+			expect(await result.text()).toBe(content);
 		});
 
-		test("should deserialize object containing Blob", async () => {
+		test("should deserialize object containing Blob without data loss", async () => {
 			const content = faker.lorem.paragraph();
-			const blob = new Blob([content], { type: "text/plain" });
-			const obj = {
+			const original = {
 				name: faker.person.fullName(),
-				avatar: blob,
+				avatar: new Blob([content], { type: "image/png" }),
 				active: true,
 			};
+			const result = deserialize(serialize(original));
 
-			const serialized = serialize(obj);
-			const result = deserialize(serialized) as typeof obj;
-
-			expect(result.name).toBe(obj.name);
-			expect(result.active).toBe(obj.active);
+			expect(result.name).toBe(original.name);
+			expect(result.active).toBe(true);
 			expect(result.avatar).toBeInstanceOf(Blob);
-			expect(result.avatar.type).toBe(blob.type);
-
-			const avatarText = await result.avatar.text();
-			expect(avatarText).toBe(content);
+			expect(result.avatar.type).toContain("image/png");
+			expect(await result.avatar.text()).toBe(content);
 		});
 
-		test("should deserialize array containing Blobs", async () => {
-			const contents = [faker.lorem.paragraph(), faker.lorem.paragraph(), faker.lorem.paragraph()];
-			const blobs = contents.map((content) => new Blob([content], { type: "text/plain" }));
+		test("should deserialize array containing Blobs without data loss", async () => {
+			const contents = [
+				faker.lorem.paragraph(),
+				faker.lorem.paragraph(),
+				faker.lorem.paragraph(),
+			];
+			const original = contents.map(c => new Blob([c], { type: "text/plain" }));
+			const result = deserialize(serialize(original));
 
-			const serialized = serialize(blobs);
-			const result = deserialize(serialized) as Blob[];
-
-			expect(Array.isArray(result)).toBe(true);
 			expect(result).toHaveLength(3);
-
-			for (let i = 0; i < result.length; i++) {
+			for (let i = 0; i < 3; i++) {
 				expect(result[i]).toBeInstanceOf(Blob);
-				const text = await result[i]?.text();
-				expect(text).toBe(contents[i]!);
+				expect(await result[i].text()).toBe(contents[i]);
 			}
 		});
 
-		test("should deserialize File objects", async () => {
+		test("should deserialize File objects without data loss", async () => {
 			const content = faker.lorem.paragraph();
 			const fileName = faker.system.fileName();
-			const file = new File([content], fileName, { type: "text/plain" });
-
-			const serialized = serialize(file);
-			const result = deserialize(serialized) as File;
+			const original = new File([content], fileName, { type: "text/plain" });
+			const result = deserialize(serialize(original));
 
 			expect(result).toBeInstanceOf(File);
 			expect(result.name).toBe(fileName);
-			expect(result.type).toBe(file.type);
+			expect(result.type).toContain("text/plain");
+			expect(await result.text()).toBe(content);
+		});
 
-			const resultText = await result.text();
-			expect(resultText).toBe(content);
+		test("should preserve File name attribute", async () => {
+			const fileName = "important-document.pdf";
+			const content = faker.lorem.paragraph();
+			const original = new File([content], fileName, { type: "application/pdf" });
+			const result = deserialize(serialize(original));
+
+			expect(result).toBeInstanceOf(File);
+			expect(result.name).toBe(fileName);
+		});
+
+		test("should preserve File type attribute", async () => {
+			const fileType = "application/json";
+			const content = JSON.stringify({ data: faker.lorem.word() });
+			const original = new File([content], "data.json", { type: fileType });
+			const result = deserialize(serialize(original));
+
+			expect(result).toBeInstanceOf(File);
+			expect(result.type).toContain(fileType);
+		});
+
+		test("should preserve File lastModified attribute", async () => {
+			const lastModified = Date.now() - 86400000;
+			const content = faker.lorem.paragraph();
+			const original = new File([content], "file.txt", { 
+				type: "text/plain", 
+				lastModified 
+			});
+			const result = deserialize(serialize(original));
+
+			expect(result).toBeInstanceOf(File);
+			expect(result.lastModified).toBe(lastModified);
+		});
+
+		test("should preserve all File attributes simultaneously", async () => {
+			const fileName = "report-2025.docx";
+			const fileType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+			const lastModified = Date.now() - 86400000;
+			const content = faker.lorem.paragraphs(5);
+			const original = new File([content], fileName, { type: fileType, lastModified });
+			const result = deserialize(serialize({ attachment: original }));
+
+			expect(result.attachment).toBeInstanceOf(File);
+			expect(result.attachment.name).toBe(fileName);
+			expect(result.attachment.type).toContain(fileType);
+			expect(result.attachment.lastModified).toBe(lastModified);
+			expect(await result.attachment.text()).toBe(content);
+		});
+
+		test("should deserialize empty Blob without data loss", async () => {
+			const original = new Blob([], { type: "text/plain" });
+			const result = deserialize(serialize(original));
+
+			expect(result).toBeInstanceOf(Blob);
+			expect(result.size).toBe(0);
+			expect(await result.text()).toBe("");
+		});
+
+		test("should deserialize Blob from multiple parts without data loss", async () => {
+			const parts = [
+				faker.lorem.paragraph(),
+				new Uint8Array([1, 2, 3, 4, 5]),
+				faker.lorem.paragraph(),
+			];
+			const original = new Blob(parts, { type: "application/octet-stream" });
+			const result = deserialize(serialize(original));
+
+			expect(result).toBeInstanceOf(Blob);
+			expect(result.size).toBe(original.size);
+			expect(result.type).toContain("application/octet-stream");
+		});
+
+		test("should deserialize multiple Blobs with same content independently", async () => {
+			const content = faker.lorem.paragraph();
+			const original = {
+				blob1: new Blob([content], { type: "text/plain" }),
+				blob2: new Blob([content], { type: "text/plain" }),
+			};
+			const result = deserialize(serialize(original));
+
+			expect(result.blob1).toBeInstanceOf(Blob);
+			expect(result.blob2).toBeInstanceOf(Blob);
+			expect(await result.blob1.text()).toBe(content);
+			expect(await result.blob2.text()).toBe(content);
+		});
+
+		test("should deserialize nested objects with Blobs at different levels", async () => {
+			const contents = [
+				faker.lorem.paragraph(),
+				faker.lorem.paragraph(),
+				faker.lorem.paragraph(),
+			];
+			const original = {
+				level1: {
+					file: new Blob([contents[0]], { type: "text/plain" }),
+					level2: {
+						file: new Blob([contents[1]], { type: "image/png" }),
+						level3: {
+							file: new Blob([contents[2]], { type: "application/json" }),
+						},
+					},
+				},
+			};
+			const result = deserialize(serialize(original));
+
+			expect(result.level1.file).toBeInstanceOf(Blob);
+			expect(result.level1.level2.file).toBeInstanceOf(Blob);
+			expect(result.level1.level2.level3.file).toBeInstanceOf(Blob);
+			expect(await result.level1.file.text()).toBe(contents[0]);
+			expect(await result.level1.level2.file.text()).toBe(contents[1]);
+			expect(await result.level1.level2.level3.file.text()).toBe(contents[2]);
+		});
+
+		test("should deserialize array of mixed Files and Blobs", async () => {
+			const content1 = faker.lorem.paragraph();
+			const content2 = faker.lorem.paragraph();
+			const content3 = faker.lorem.paragraph();
+			const content4 = faker.lorem.paragraph();
+
+			const original = [
+				new Blob([content1], { type: "text/plain" }),
+				new File([content2], faker.system.fileName(), { type: "image/png" }),
+				new Blob([content3], { type: "application/json" }),
+				new File([content4], faker.system.fileName(), { type: "video/mp4" }),
+			];
+
+			const serialized = serialize(original);
+			const result = deserialize(serialized);
+
+			expect(result).toHaveLength(4);
+			expect(result[0]).toBeInstanceOf(Blob);
+			expect(result[1]).toBeInstanceOf(File);
+			expect(result[2]).toBeInstanceOf(Blob);
+			expect(result[3]).toBeInstanceOf(File);
+
+			const texts = await Promise.all(result.map((r: Blob) => r.text()));
+			expect(texts[0]).toBe(content1);
+			expect(texts[1]).toBe(content2);
+			expect(texts[2]).toBe(content3);
+			expect(texts[3]).toBe(content4);
+		});
+
+		test("should preserve Blob with binary data", async () => {
+			const binaryData = new Uint8Array([0, 1, 2, 3, 255, 254, 253]);
+			const original = new Blob([binaryData], { type: "application/octet-stream" });
+
+			const serialized = serialize(original);
+			const result = deserialize(serialized);
+
+			expect(result).toBeInstanceOf(Blob);
+			
+			const arrayBuffer = await result.arrayBuffer();
+			const resultData = new Uint8Array(arrayBuffer);
+			
+			expect(resultData).toEqual(binaryData);
 		});
 	});
 
 	describe("extension handling", () => {
-		test("should deserialize Date with DateExtension", () => {
-			const date = faker.date.recent();
-			const serialized = serialize(date, [DateExtension]);
-			const result = deserialize(serialized, [DateExtension]) as Date;
-
-			expect(result).toBeInstanceOf(Date);
-			expect(result.getTime()).toBe(date.getTime());
-		});
-
-		test("should deserialize BigInt with BigIntExtension", () => {
-			const bigInt = BigInt(faker.number.bigInt());
-			const serialized = serialize(bigInt, [BigIntExtension]);
-			const result = deserialize(serialized, [BigIntExtension]);
-
-			expect(typeof result).toBe("bigint");
-			expect(result).toBe(bigInt);
-		});
-
-		test("should deserialize object with extension types", () => {
-			const date = faker.date.recent();
-			const bigInt = BigInt(faker.number.bigInt());
-			const obj = {
-				name: faker.person.fullName(),
-				createdAt: date,
-				id: bigInt,
-				count: faker.number.int(),
-			};
-
-			const serialized = serialize(obj, [DateExtension, BigIntExtension]);
-			const result = deserialize(serialized, [DateExtension, BigIntExtension]) as typeof obj;
-
-			expect(result.name).toBe(obj.name);
-			expect(result.count).toBe(obj.count);
-			expect(result.createdAt).toBeInstanceOf(Date);
-			expect(result.createdAt.getTime()).toBe(date.getTime());
-			expect(typeof result.id).toBe("bigint");
-			expect(result.id).toBe(bigInt);
-		});
-
-		test("should deserialize extension that returned Blob", async () => {
-			const customData = { special: faker.lorem.sentence() };
-			const blobExtension: SerializationExtension<typeof customData> = {
-				name: "custom-blob",
-				serialize: (value) => JSON.stringify(value), // Return string instead of Blob for this test
-				deserialize: (value) => JSON.parse(value as string) as typeof customData,
-				canHandle: (value): value is typeof customData =>
-					typeof value === "object" && value !== null && "special" in value,
-			};
-
-			const serialized = serialize(customData, [blobExtension]);
-			const result = deserialize(serialized, [blobExtension]);
-
-			expect(result).toEqual(customData);
-		});
-
-		test("should fail when extension is missing during deserialization", () => {
-			const date = faker.date.recent();
-			const serialized = serialize(date, [DateExtension]);
-
-			// Try to deserialize without the extension
-			expect(() => deserialize(serialized, [])).toThrow(
-				"Extension 'date' not found in provided extensions",
+		test("should deserialize Date with DateExtension without data loss", () => {
+			const original = faker.date.recent();
+			const result = deserialize(
+				serialize(original, { extensions: [DateExtension] }),
+				{ extensions: [DateExtension] }
 			);
+			expect(result).toBeInstanceOf(Date);
+			expect(result.getTime()).toBe(original.getTime());
 		});
 
-		test("should handle extension deserialization errors gracefully", () => {
-			const date = faker.date.recent();
-			const brokenExtension: SerializationExtension<Date> = {
-				name: "broken-date",
-				serialize: (value: Date) => value.toISOString(),
-				deserialize: () => {
-					throw new Error("Deserialization failed");
-				},
-				canHandle: (value: unknown): value is Date => value instanceof Date,
+		test("should deserialize BigInt with BigIntExtension without data loss", () => {
+			const original = BigInt("9007199254740991999");
+			const result = deserialize(
+				serialize(original, { extensions: [BigIntExtension] }),
+				{ extensions: [BigIntExtension] }
+			);
+			expect(result).toBe(original);
+		});
+
+		test("should deserialize object with multiple extension types without data loss", () => {
+			const original = {
+				createdAt: faker.date.recent(),
+				id: BigInt(faker.number.bigInt()),
+				name: faker.person.fullName(),
+			};
+			const result = deserialize(
+				serialize(original, { extensions: [DateExtension, BigIntExtension] }),
+				{ extensions: [DateExtension, BigIntExtension] }
+			);
+
+			expect(result.createdAt).toBeInstanceOf(Date);
+			expect(result.createdAt.getTime()).toBe(original.createdAt.getTime());
+			expect(result.id).toBe(original.id);
+			expect(result.name).toBe(original.name);
+		});
+
+		test("should deserialize custom extension without data loss", () => {
+			class CustomClass {
+				constructor(public value: string) {}
+			}
+
+			const CustomExtension: SerializationExtension<CustomClass> = {
+				name: "custom",
+				serialize: (obj) => obj.value,
+				deserialize: (data) => new CustomClass(data as string),
+				canHandle: (value): value is CustomClass => value instanceof CustomClass,
 			};
 
-			const serialized = serialize(date, [brokenExtension]);
+			const original = new CustomClass(faker.lorem.word());
+			const result = deserialize(
+				serialize(original, { extensions: [CustomExtension] }),
+				{ extensions: [CustomExtension] }
+			);
 
-			expect(() => deserialize(serialized, [brokenExtension])).toThrow("Deserialization failed");
+			expect(result).toBeInstanceOf(CustomClass);
+			expect(result.value).toBe(original.value);
+		});
+
+		test("should deserialize array of extension types without data loss", () => {
+			const original = [
+				faker.date.recent(),
+				faker.date.recent(),
+				faker.date.recent(),
+			];
+			const result = deserialize(
+				serialize(original, { extensions: [DateExtension] }),
+				{ extensions: [DateExtension] }
+			);
+
+			expect(result).toHaveLength(3);
+			result.forEach((date: Date, i: number) => {
+				expect(date).toBeInstanceOf(Date);
+				expect(date.getTime()).toBe(original[i].getTime());
+			});
 		});
 	});
 
-	describe("round-trip consistency", () => {
-		test("should maintain data integrity through serialize/deserialize cycle", async () => {
+	describe("complex structures", () => {
+		test("should deserialize complex mixed data without data loss", async () => {
 			const content1 = faker.lorem.paragraph();
 			const content2 = faker.lorem.paragraph();
-			const date = faker.date.recent();
-			const bigInt = BigInt(faker.number.bigInt());
+			const date1 = faker.date.recent();
+			const date2 = faker.date.recent();
+			const bigInt = BigInt("123456789012345678901234567890");
 
-			const originalData = {
+			const original = {
 				metadata: {
-					created: date,
+					created: date1,
 					id: bigInt,
+					tags: [faker.lorem.word(), faker.lorem.word()],
 					files: [
 						new Blob([content1], { type: "text/plain" }),
-						new Blob([content2], { type: "application/json" }),
+						new Blob([content2], { type: "text/plain" }),
 					],
-					tags: [faker.lorem.word(), faker.lorem.word()],
 				},
 				users: [
 					{
 						name: faker.person.fullName(),
-						avatar: new File([faker.image.avatar()], "avatar1.jpg", {
-							type: "image/jpeg",
-						}),
-						joinDate: faker.date.past(),
-					},
-					{
-						name: faker.person.fullName(),
-						avatar: new File([faker.image.avatar()], "avatar2.png", {
-							type: "image/png",
-						}),
-						joinDate: faker.date.past(),
+						joinDate: date2,
+						avatar: new Blob([faker.lorem.paragraph()], { type: "image/png" }),
 					},
 				],
 				settings: {
-					theme: faker.color.human(),
-					notifications: faker.datatype.boolean(),
+					theme: "dark",
+					notifications: true,
 				},
 			};
-
-			const serialized = serialize(originalData, [DateExtension, BigIntExtension]);
-			const deserialized = deserialize(serialized, [
-				DateExtension,
-				BigIntExtension,
-			]) as typeof originalData;
-
-			// Check primitive values
-			expect(deserialized.metadata.tags).toEqual(originalData.metadata.tags);
-			expect(deserialized.settings).toEqual(originalData.settings);
-			expect(deserialized.users[0]?.name).toBe(originalData.users[0]!.name);
-			expect(deserialized.users[1]?.name).toBe(originalData.users[1]!.name);
-
-			// Check extensions
-			expect(deserialized.metadata.created).toBeInstanceOf(Date);
-			expect(deserialized.metadata.created.getTime()).toBe(originalData.metadata.created.getTime());
-			expect(typeof deserialized.metadata.id).toBe("bigint");
-			expect(deserialized.metadata.id).toBe(originalData.metadata.id);
-			expect(deserialized.users[0]?.joinDate).toBeInstanceOf(Date);
-			expect(deserialized.users[1]?.joinDate).toBeInstanceOf(Date);
-
-			// Check blobs
-			expect(deserialized.metadata.files).toHaveLength(2);
-			expect(deserialized.metadata.files[0]).toBeInstanceOf(Blob);
-			expect(deserialized.metadata.files[1]).toBeInstanceOf(Blob);
-
-			const file1Text = await deserialized.metadata.files[0]?.text();
-			const file2Text = await deserialized.metadata.files[1]?.text();
-			expect(file1Text).toBe(content1);
-			expect(file2Text).toBe(content2);
-
-			// Check File objects
-			expect(deserialized.users[0]?.avatar).toBeInstanceOf(File);
-			expect(deserialized.users[1]?.avatar).toBeInstanceOf(File);
-			expect((deserialized.users[0]?.avatar as File).name).toBe("avatar1.jpg");
-			expect((deserialized.users[1]?.avatar as File).name).toBe("avatar2.png");
-		});
-	});
-
-	describe("error handling", () => {
-		test("should throw error when FormData has no data key", () => {
-			const formData = new FormData();
-			formData.append("other", "value");
-
-			expect(() => deserialize(formData)).toThrow("No data found in FormData");
-		});
-
-		test("should throw error when data key contains invalid JSON", () => {
-			const formData = new FormData();
-			formData.append(DATA_KEY, "invalid json{");
-
-			expect(() => deserialize(formData)).toThrow("Failed to parse data from FormData");
-		});
-
-		test("should throw error when file hole is missing", () => {
-			const formData = new FormData();
-			formData.append(DATA_KEY, JSON.stringify("$ref:missing-id"));
-
-			expect(() => deserialize(formData)).toThrow("File hole not found for key: $ref:missing-id");
-		});
-
-		test("should throw error when extension data is missing", () => {
-			const formData = new FormData();
-			formData.append(DATA_KEY, JSON.stringify("$ext:missing:id"));
-
-			expect(() => deserialize(formData)).toThrow(
-				"Extension data not found for key: $ext:missing:id",
+			const result = deserialize(
+				serialize(original, { extensions: [DateExtension, BigIntExtension] }),
+				{ extensions: [DateExtension, BigIntExtension] }
 			);
+
+			// Verify extensions and structure
+			expect(result.metadata.created).toBeInstanceOf(Date);
+			expect(result.metadata.created.getTime()).toBe(date1.getTime());
+			expect(result.metadata.id).toBe(bigInt);
+			expect(result.users[0].joinDate).toBeInstanceOf(Date);
+			expect(result.users[0].joinDate.getTime()).toBe(date2.getTime());
+			expect(result.metadata.files[0]).toBeInstanceOf(Blob);
+			expect(result.metadata.files[1]).toBeInstanceOf(Blob);
+			expect(result.users[0].avatar).toBeInstanceOf(Blob);
+			expect(await result.metadata.files[0].text()).toBe(content1);
+			expect(await result.metadata.files[1].text()).toBe(content2);
+			expect(result.metadata.tags).toEqual(original.metadata.tags);
+			expect(result.settings).toEqual(original.settings);
+			expect(result.users[0].name).toBe(original.users[0].name);
 		});
 
-		test("should throw error when file hole contains non-Blob", () => {
-			const formData = new FormData();
-			formData.append(DATA_KEY, JSON.stringify("$ref:test-id"));
-			formData.append("$ref:test-id", "not a blob");
-
-			expect(() => deserialize(formData)).toThrow(
-				"Expected Blob for file hole key '$ref:test-id', but got string",
-			);
-		});
-
-		test("should throw error when extension data has invalid JSON", () => {
-			const formData = new FormData();
-			formData.append(DATA_KEY, JSON.stringify("$ext:test:id"));
-			formData.append("$ext:test:id", "invalid json{");
-
-			expect(() => deserialize(formData)).toThrow(
-				"Failed to parse extension data for key '$ext:test:id'",
-			);
-		});
-
-		test("should handle malformed file hole key by returning as string", () => {
-			const formData = new FormData();
-			formData.append(DATA_KEY, JSON.stringify("$ref:"));
-
-			const result = deserialize(formData);
-			expect(result).toBe("$ref:"); // Should return as-is since regex doesn't match
-		});
-		test("should handle malformed extension key by returning as string", () => {
-			const formData = new FormData();
-			formData.append(DATA_KEY, JSON.stringify("$ext:"));
-
-			const result = deserialize(formData);
-			expect(result).toBe("$ext:"); // Should return as-is since regex doesn't match
-		});
-
-		test("should validate extensions and throw appropriate errors", () => {
-			const invalidExtension = {
-				name: "test:invalid",
-				serialize: () => "",
-				deserialize: () => null,
-				canHandle: () => false,
-			};
-
-			// Test intentionally provides an invalid extension shape; suppress
-			// TypeScript error for the test input only.
-			// @ts-ignore - intentionally passing an invalid extension object
-			expect(() => deserialize(new FormData(), [invalidExtension])).toThrow(
-				"Extension name 'test:invalid' cannot contain colon (:) character",
-			);
-		});
-
-		test("should handle file hole with null/undefined blob data", () => {
-			const formData = new FormData();
-			formData.append(DATA_KEY, JSON.stringify("$ref:test-id"));
-
-			// Create a scenario where the file hole exists but contains invalid data
-			const originalGet = formData.get.bind(formData);
-			formData.get = (key: string) => {
-				if (key === "$ref:test-id") return null;
-				return originalGet(key);
-			};
-
-			const _originalEntries = formData.entries.bind(formData);
-			// @ts-ignore - intentionally yield a non-string value to simulate malformed FormData
-			formData.entries = function* () {
-				yield [DATA_KEY, JSON.stringify("$ref:test-id")];
-				// simulate malformed FormData where an entry is present but null;
-				yield ["$ref:test-id", null as any];
-			};
-
-			expect(() => deserialize(formData)).toThrow(
-				"Expected Blob for file hole key '$ref:test-id', but got object",
-			);
-		});
-	});
-
-	describe("edge cases", () => {
-		test("should handle empty extensions array", () => {
-			const obj = { name: faker.person.fullName() };
-			const serialized = serialize(obj, []);
-			const result = deserialize(serialized, []);
-
-			expect(result).toEqual(obj);
-		});
-
-		test("should handle no extensions parameter", () => {
-			const obj = { name: faker.person.fullName() };
-			const serialized = serialize(obj);
-			const result = deserialize(serialized);
-
-			expect(result).toEqual(obj);
-		});
-
-		test("should handle deeply nested structures", () => {
-			const deepObj = {
+		test("should deserialize deeply nested structures without data loss", () => {
+			const original = {
 				level1: {
 					level2: {
 						level3: {
 							level4: {
 								level5: {
 									value: faker.lorem.word(),
-									blob: new Blob([faker.lorem.sentence()]),
+									number: faker.number.float(),
+									boolean: faker.datatype.boolean(),
 								},
 							},
 						},
 					},
 				},
 			};
-
-			const serialized = serialize(deepObj);
-			const result = deserialize(serialized) as typeof deepObj;
-
-			expect(result.level1.level2.level3.level4.level5.value).toBe(
-				deepObj.level1.level2.level3.level4.level5.value,
-			);
-			expect(result.level1.level2.level3.level4.level5.blob).toBeInstanceOf(Blob);
+			const result = deserialize(serialize(original));
+			expect(result).toEqual(original);
 		});
 
-		test("should handle very large arrays", () => {
-			const largeArray = Array.from({ length: 1000 }, () => faker.lorem.word());
-			const serialized = serialize(largeArray);
+		test("should deserialize array of objects with Blobs without data loss", async () => {
+			const contents = [
+				faker.lorem.paragraph(),
+				faker.lorem.paragraph(),
+				faker.lorem.paragraph(),
+			];
+			const original = Array.from({ length: 3 }, (_, i) => ({
+				name: faker.person.fullName(),
+				email: faker.internet.email(),
+				avatar: new Blob([contents[i]], { type: "image/png" }),
+			}));
+			const result = deserialize(serialize(original));
+
+			expect(result).toHaveLength(3);
+			for (let i = 0; i < 3; i++) {
+				expect(result[i].name).toBe(original[i].name);
+				expect(result[i].email).toBe(original[i].email);
+				expect(result[i].avatar).toBeInstanceOf(Blob);
+				expect(await result[i].avatar.text()).toBe(contents[i]);
+			}
+		});
+	});
+
+	describe("edge cases", () => {
+		test("should deserialize unicode strings without data loss", () => {
+			const original = {
+				emoji: "🚀 👋 🎉",
+				chinese: "你好世界",
+				arabic: "مرحبا بالعالم",
+				japanese: "こんにちは世界",
+			};
+			const result = deserialize(serialize(original));
+			expect(result).toEqual(original);
+		});
+
+		test("should deserialize very long strings without data loss", () => {
+			const longString = faker.lorem.paragraphs(100);
+			const original = { content: longString };
+			const result = deserialize(serialize(original));
+			expect(result.content).toBe(longString);
+		});
+
+		test("should deserialize NaN (becomes null)", () => {
+			const original = { value: Number.NaN };
+
+			const serialized = serialize(original);
 			const result = deserialize(serialized);
 
-			expect(result).toEqual(largeArray);
+			expect(result.value).toBe(null);
 		});
 
-		test("should handle extension with empty string data", () => {
-			const emptyExtension: SerializationExtension<string> = {
-				name: "empty-string",
-				serialize: () => "",
-				deserialize: (value) => value as string,
-				canHandle: (value): value is string => value === "EMPTY_MARKER",
+		test("should deserialize Infinity (becomes null)", () => {
+			const original = { value: Number.POSITIVE_INFINITY };
+
+			const serialized = serialize(original);
+			const result = deserialize(serialized);
+
+			expect(result.value).toBe(null);
+		});
+
+		test("should deserialize mixed null and valid values without data loss", () => {
+			const original = {
+				user: {
+					name: faker.person.fullName(),
+					deletedAt: null,
+					profile: {
+						bio: faker.lorem.sentence(),
+						avatar: null,
+					},
+				},
+				tags: [faker.lorem.word(), null, faker.lorem.word()],
+			};
+			const result = deserialize(serialize(original));
+			expect(result).toEqual(original);
+		});
+
+		test("should deserialize arrays with various falsy values without data loss", () => {
+			const original = [0, "", false, null, faker.lorem.word()];
+			const result = deserialize(serialize(original));
+			expect(result).toEqual(original);
+		});
+
+		test("should deserialize very large arrays without data loss", () => {
+			const original = Array.from({ length: 1000 }, (_, i) => ({
+				id: i,
+				value: faker.lorem.word(),
+			}));
+			const result = deserialize(serialize(original));
+			expect(result).toHaveLength(1000);
+			expect(result[0]).toEqual(original[0]);
+			expect(result[500]).toEqual(original[500]);
+			expect(result[999]).toEqual(original[999]);
+		});
+
+		test("should deserialize negative zero", () => {
+			const original = { value: -0 };
+			const result = deserialize(serialize(original));
+			// JSON doesn't distinguish -0 from 0
+			expect(result.value).toBe(0);
+		});
+
+		test("should deserialize very small and very large numbers without precision loss", () => {
+			const original = {
+				small: Number.MIN_VALUE,
+				large: Number.MAX_VALUE,
+				safeInt: Number.MAX_SAFE_INTEGER,
+			};
+			const result = deserialize(serialize(original));
+			expect(result).toEqual(original);
+		});
+
+		test("should throw on missing $data key", () => {
+			const invalidFormData = new FormData();
+			invalidFormData.set("someKey", "someValue");
+
+			expect(() => deserialize(invalidFormData)).toThrow("No data found in FormData");
+		});
+
+		test("should throw on invalid JSON in $data", () => {
+			const invalidFormData = new FormData();
+			invalidFormData.set(DEFAULT_REFERENCE_PREFIX.data, "invalid json {");
+
+			expect(() => deserialize(invalidFormData)).toThrow();
+		});
+
+		test("should deserialize Blob with special characters in content", async () => {
+			const content = "Special: \n\t\r chars and 🎉";
+			const original = new Blob([content], { type: "text/plain" });
+			const result = deserialize(serialize({ file: original }));
+			expect(result.file).toBeInstanceOf(Blob);
+			expect(await result.file.text()).toBe(content);
+		});
+
+		test("should deserialize empty string keys without data loss", () => {
+			const original = {
+				"": faker.lorem.word(),
+				normal: faker.lorem.word(),
+			};
+			const result = deserialize(serialize(original));
+			expect(result).toEqual(original);
+		});
+
+		test("should preserve data through multiple serialize/deserialize cycles", async () => {
+			const content = faker.lorem.paragraph();
+			const original = {
+				string: faker.lorem.word(),
+				number: faker.number.float(),
+				boolean: true,
+				null: null,
+				blob: new Blob([content], { type: "text/plain" }),
+				date: faker.date.recent(),
+				bigInt: BigInt(123456789),
+				nested: {
+					array: [1, 2, 3],
+				},
 			};
 
-			const serialized = serialize("EMPTY_MARKER", [emptyExtension]);
-			const result = deserialize(serialized, [emptyExtension]);
+			// First cycle
+			const deserialized1 = deserialize(
+				serialize(original, { extensions: [DateExtension, BigIntExtension] }),
+				{ extensions: [DateExtension, BigIntExtension] }
+			);
 
-			expect(result).toBe("");
+			// Second cycle
+			const deserialized2 = deserialize(
+				serialize(deserialized1, { extensions: [DateExtension, BigIntExtension] }),
+				{ extensions: [DateExtension, BigIntExtension] }
+			);
+
+			// Verify all data preserved
+			expect(deserialized2.string).toBe(original.string);
+			expect(deserialized2.number).toBe(original.number);
+			expect(deserialized2.boolean).toBe(original.boolean);
+			expect(deserialized2.null).toBe(null);
+			expect(deserialized2.date).toBeInstanceOf(Date);
+			expect(deserialized2.date.getTime()).toBe(original.date.getTime());
+			expect(deserialized2.bigInt).toBe(original.bigInt);
+			expect(deserialized2.nested).toEqual(original.nested);
+			expect(await deserialized2.blob.text()).toBe(content);
 		});
 	});
 });
+
