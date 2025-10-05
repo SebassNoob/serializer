@@ -28,15 +28,15 @@
 		}
 	},
 	"devDependencies": {
-		"@faker-js/faker": "^9.9.0",
-		"@playwright/test": "^1.55.0",
+		"@faker-js/faker": "^10.0.0",
+		"@playwright/test": "^1.55.1",
 		"@types/bun": "latest",
-		"playwright": "^1.55.0",
-		"typedoc": "^0.28.10",
-		"typedoc-plugin-markdown": "^4.8.1"
+		"playwright": "^1.55.1",
+		"typedoc": "^0.28.13",
+		"typedoc-plugin-markdown": "^4.9.0"
 	},
 	"peerDependencies": {
-		"typescript": "^5.9.2"
+		"typescript": "^5.9.3"
 	},
 	"files": [
 		"dist"
@@ -49,6 +49,6 @@
 		"build": "bun run src/build.ts"
 	},
 	"dependencies": {
-		"uuid": "^11.1.0"
+		"uuid": "^13.0.0"
 	}
 }

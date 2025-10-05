@@ -1,11 +1,11 @@
 {
   "name": "form-data-serializer-root",
   "devDependencies": {
-    "@biomejs/biome": "^2.2.0",
-    "turbo": "^2.5.5",
-    "typescript": "^5.9.2",
-    "@changesets/cli": "^2.29.5",
-    "syncpack": "^13.0.0"
+    "@biomejs/biome": "^2.2.5",
+    "turbo": "^2.5.8",
+    "typescript": "^5.9.3",
+    "@changesets/cli": "^2.29.7",
+    "syncpack": "^13.0.4"
   },
   "packageManager": "bun@1.2.20",
   "private": true,
