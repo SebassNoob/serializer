@@ -1,92 +1,84 @@
 /**
  * Represents the primitive types that can be directly serialized to JSON.
  * These are the basic building blocks of serializable data.
+ *
+ * @internal
  */
 type JSONPrimitive = string | number | boolean | null;
 
 /**
- * Base types that can be serialized, including JSON primitives, Blob objects, and custom extension types.
- *
- * @typeParam ExtensionType - The type of custom objects that can be handled by extensions
- */
-type BaseSerializable<ExtensionType = never> = JSONPrimitive | Blob | ExtensionType;
-
-/**
  * Recursive type representing all data structures that can be serialized.
- * This includes primitives, objects, arrays, and any combination thereof.
  *
- * The type supports:
- * - JSON primitives (string, number, boolean, null)
- * - Blob objects (files, binary data)
- * - Custom extension types
+ * Supports:
+ * - JSON primitives: `string`, `number`, `boolean`, `null`
+ * - Binary data: `Blob`, `File`
+ * - Custom types via extensions: `Date`, `RegExp`, Map, Set, etc.
  * - Nested objects with string keys
- * - Arrays of serializable values
+ * - Arrays of any serializable values
  *
- * @typeParam ExtensionType - The union type of all custom objects that can be handled by extensions.
- *   Defaults to `never` when no extensions are used.
- *
- * @example Basic usage without extensions
+ * @example Basic usage
  * ```typescript
- * type MyData = Serializable; // string | number | boolean | null | Blob | { [key: string]: Serializable } | Serializable[]
- *
- * const data: MyData = {
+ * const data: Serializable = {
  *   name: "John",
  *   age: 30,
  *   avatar: new Blob(["image data"]),
  *   tags: ["user", "admin"],
- *   nested: {
- *     value: true
- *   }
+ *   nested: { value: true }
  * };
  * ```
  *
  * @example With custom extension types
  * ```typescript
- * type MyData = Serializable<Date | RegExp>;
- *
- * const data: MyData = {
- *   created: new Date(), // Date is handled by extension
- *   pattern: /test/, // RegExp is handled by extension
- *   name: "example"
+ * // When using extensions, the type accepts those custom types
+ * const data: Serializable = {
+ *   created: new Date(),      // ✓ Date handled by extension
+ *   pattern: /test/,          // ✓ RegExp handled by extension
+ *   name: "example"           // ✓ Primitive
  * };
  * ```
- *
- * @internal
  */
-export type Serializable<ExtensionType = never> =
-	| BaseSerializable<ExtensionType>
-	| { [key: string]: Serializable<ExtensionType> }
-	| Serializable<ExtensionType>[];
+export type Serializable = JSONPrimitive | Blob | { [key: string]: Serializable } | Serializable[];
 
 /**
- * Interface defining how custom types are serialized and deserialized.
+ * Defines how custom types are serialized to and deserialized from FormData.
  *
- * Extensions allow the serializer to handle custom JavaScript types (like Date, RegExp, etc.)
- * by converting them to/from strings or Blobs that can be stored in FormData.
+ * Extensions enable the serializer to handle any JavaScript type (Date, RegExp, Map, Set, etc.)
+ * by converting them to/from strings or Blobs.
  *
- * @typeParam T - The type of value this extension can handle
+ * @typeParam T - The custom type this extension handles
+ * @typeParam SerializedType - The serialized representation (`string` or `Blob`)
  *
- * @example Date extension
+ * @example Date extension (serializes to ISO string)
  * ```typescript
- * const dateExtension: SerializationExtension<Date> = {
+ * const dateExtension: SerializationExtension<Date, string> = {
  *   name: "date",
  *   canHandle: (value): value is Date => value instanceof Date,
  *   serialize: (date) => date.toISOString(),
- *   deserialize: (str) => new Date(str as string)
+ *   deserialize: (str) => new Date(str)
  * };
  * ```
  *
- * @example RegExp extension with Blob output
+ * @example RegExp extension (serializes to Blob)
  * ```typescript
- * const regexpExtension: SerializationExtension<RegExp> = {
+ * const regexpExtension: SerializationExtension<RegExp, Blob> = {
  *   name: "regexp",
  *   canHandle: (value): value is RegExp => value instanceof RegExp,
- *   serialize: (regexp) => new Blob([regexp.source, regexp.flags]),
- *   deserialize: (blob) => {
- *     const text = await (blob as Blob).text();
+ *   serialize: (regexp) => new Blob([regexp.source + '\n' + regexp.flags]),
+ *   deserialize: async (blob) => {
+ *     const text = await blob.text();
  *     const [source, flags] = text.split('\n');
  *     return new RegExp(source, flags);
  *   }
+ * };
+ * ```
+ *
+ * @example Map extension (serializes to JSON string)
+ * ```typescript
+ * const mapExtension: SerializationExtension<Map<string, any>, string> = {
+ *   name: "map",
+ *   canHandle: (value): value is Map<string, any> => value instanceof Map,
+ *   serialize: (map) => JSON.stringify(Array.from(map.entries())),
+ *   deserialize: (str) => new Map(JSON.parse(str))
  * };
  * ```
  */
@@ -94,78 +86,96 @@ export type Serializable<ExtensionType = never> =
 export interface SerializationExtension<T = any, SerializedType = string | Blob> {
 	/**
 	 * Unique identifier for this extension.
-	 * Used in the FormData keys to identify which extension serialized a value.
 	 *
+	 * Used in FormData keys (e.g., `$ext:date:uuid`) to identify which extension
+	 * serialized a value. Must be unique across all extensions.
 	 */
 	name: string;
 
 	/**
-	 * Converts a value of type T into a string or Blob for storage in FormData.
+	 * Type guard that determines if this extension can handle a value.
+	 *
+	 * @param value - The value to check
+	 * @returns `true` if this extension can handle the value
+	 */
+	canHandle: (value: unknown) => value is T;
+
+	/**
+	 * Converts a value into a storable format for FormData.
 	 *
 	 * @param value - The value to serialize
-	 * @returns A string (stored as JSON in FormData) or Blob (stored directly in FormData)
-	 *
+	 * @returns A `string` (stored as JSON) or `Blob` (stored directly)
 	 */
 	serialize: (value: T) => SerializedType;
 
 	/**
-	 * Reconstructs a value of type T from its serialized form.
+	 * Reconstructs the original value from its serialized form.
 	 *
-	 * @param value - The serialized data (string or Blob) from FormData
+	 * @param value - The serialized data from FormData
 	 * @returns The reconstructed original value
-	 *
 	 */
 	deserialize: (value: SerializedType) => T;
-
-	/**
-	 * Type guard function that determines if a value can be handled by this extension.
-	 *
-	 * @param value - The value to check
-	 * @returns True if this extension can handle the value, false otherwise
-	 *
-	 */
-	canHandle: (value: unknown) => value is T;
 }
-
-export interface SerializeConfig {
-	extensions?: readonly SerializationExtension<any>[];
-	referencePrefix?: {
-		data?: string;
-		extension?: string;
-	};
-	generateDataId?: (item: Serializable) => string;
-}
-
 
 /**
- * Utility type that extracts all the types that can be handled by an array of extensions.
+ * Configuration options for serialize/deserialize operations.
  *
- * This type is used internally to determine what custom types are supported
- * when a specific set of extensions is provided to the serialize/deserialize functions.
- *
- * @typeParam T - Array of SerializationExtension objects
- *
- * @example
+ * @example Basic configuration with extensions
  * ```typescript
- * const extensions = [dateExtension, regexpExtension] as const;
- * type HandledTypes = ExtractExtensionTypes<typeof extensions>; // Date | RegExp
+ * const config: SerializeConfig = {
+ *   extensions: [dateExtension, regexpExtension]
+ * };
  *
- * // This means Serializable<HandledTypes> can contain Date and RegExp objects
- * type MySerializableData = Serializable<HandledTypes>;
+ * serialize(data, config);
+ * deserialize(formData, config);
  * ```
  *
- * @example Usage in function signatures
+ * @example Custom reference prefixes
  * ```typescript
- * function mySerialize<T extends readonly SerializationExtension<any>[]>(
- *   data: Serializable<ExtractExtensionTypes<T>>,
- *   extensions: T
- * ) {
- *   // TypeScript knows that 'data' can contain types handled by the extensions
- * }
+ * const config: SerializeConfig = {
+ *   referencePrefix: {
+ *     data: "main",           // Use "main" instead of "$data"
+ *     extension: "@ref"       // Use "@ref:" instead of "$ext:"
+ *   }
+ * };
  * ```
  *
- * @internal
+ * @example Custom ID generation
+ * ```typescript
+ * let counter = 0;
+ * const config: SerializeConfig = {
+ *   generateDataId: () => `id-${counter++}`
+ * };
+ * ```
  */
-// biome-ignore lint/suspicious/noExplicitAny: unavoidable due to dynamic nature of extensions
-export type ExtractExtensionTypes<T extends readonly SerializationExtension<any>[]> =
-	T extends readonly (infer U)[] ? (U extends SerializationExtension<infer V> ? V : never) : never;
+export interface SerializeConfig {
+	/**
+	 * Array of extensions to handle custom types.
+	 *
+	 * Note: `BlobExtension` is automatically included and doesn't need to be added.
+	 *
+	 * @default []
+	 */
+	extensions?: readonly SerializationExtension<any>[];
+
+	/**
+	 * Custom prefixes for FormData keys.
+	 *
+	 * @default { data: "$data", extension: "$ext" }
+	 */
+	referencePrefix?: {
+		/** Key for the main data structure (default: `"$data"`) */
+		data?: string;
+		/** Prefix for extension references (default: `"$ext"`) */
+		extension?: string;
+	};
+
+	/**
+	 * Custom function to generate unique IDs for extension data.
+	 *
+	 * @param item - The serialized value
+	 * @returns A unique string identifier
+	 * @default UUID v7 generation
+	 */
+	generateDataId?: (item: Serializable) => string;
+}

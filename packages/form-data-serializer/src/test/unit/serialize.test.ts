@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { faker } from "@faker-js/faker";
 import { type SerializationExtension, serialize } from "@/serialize-refactor";
-import { BigIntExtension, DateExtension, ErrorExtension, SymbolExtension } from "@/extensions-refactor";
+import {
+	BigIntExtension,
+	DateExtension,
+	ErrorExtension,
+	SymbolExtension,
+} from "@/extensions-refactor";
 import { DEFAULT_REFERENCE_PREFIX } from "@/serialize-refactor/constants";
 
 describe("serialize", () => {
@@ -177,12 +182,7 @@ describe("serialize", () => {
 
 	describe("arrays", () => {
 		test("should serialize array of primitives", () => {
-			const arr = [
-				faker.lorem.word(),
-				faker.number.int(),
-				faker.datatype.boolean(),
-				null,
-			];
+			const arr = [faker.lorem.word(), faker.number.int(), faker.datatype.boolean(), null];
 
 			const result = serialize(arr);
 
@@ -206,7 +206,10 @@ describe("serialize", () => {
 			const arr = [
 				[1, 2, 3],
 				[4, 5, 6],
-				[[7, 8], [9, 10]],
+				[
+					[7, 8],
+					[9, 10],
+				],
 			];
 
 			const result = serialize(arr);
@@ -225,12 +228,7 @@ describe("serialize", () => {
 		});
 
 		test("should serialize array with null values", () => {
-			const arr = [
-				faker.lorem.word(),
-				null,
-				faker.number.int(),
-				null,
-			];
+			const arr = [faker.lorem.word(), null, faker.number.int(), null];
 
 			const result = serialize(arr);
 
@@ -240,7 +238,7 @@ describe("serialize", () => {
 
 		test("should serialize sparse array (holes become undefined, then omitted)", () => {
 			const arr = [1, , 3]; // eslint-disable-line no-sparse-arrays
-			
+
 			const result = serialize(arr);
 
 			const dataValue = JSON.parse(result.get(DEFAULT_REFERENCE_PREFIX.data) as string);
@@ -279,8 +277,9 @@ describe("serialize", () => {
 		});
 
 		test("should serialize array containing Blobs", () => {
-			const blobs = Array.from({ length: 3 }, () =>
-				new Blob([faker.lorem.paragraph()], { type: "text/plain" }),
+			const blobs = Array.from(
+				{ length: 3 },
+				() => new Blob([faker.lorem.paragraph()], { type: "text/plain" }),
 			);
 
 			const result = serialize(blobs);
@@ -304,7 +303,7 @@ describe("serialize", () => {
 			const dataValue = JSON.parse(result.get(DEFAULT_REFERENCE_PREFIX.data) as string);
 			expect(dataValue).toMatch(/^\$ref:blob:/);
 			expect(result.has(dataValue)).toBe(true);
-			
+
 			// Verify the File object is stored in FormData
 			const storedFile = result.get(dataValue);
 			expect(storedFile).toBeInstanceOf(File);
@@ -321,40 +320,37 @@ describe("serialize", () => {
 
 			const dataValue = JSON.parse(result.get(DEFAULT_REFERENCE_PREFIX.data) as string);
 			const storedFile = result.get(dataValue.document);
-			
+
 			expect(storedFile).toBeInstanceOf(File);
 			expect((storedFile as File).name).toBe(fileName);
 		});
 
 		test("should preserve File type attribute", () => {
-			const file = new File(
-				[faker.lorem.paragraph()],
-				faker.system.fileName(),
-				{ type: "image/jpeg" }
-			);
+			const file = new File([faker.lorem.paragraph()], faker.system.fileName(), {
+				type: "image/jpeg",
+			});
 
 			const result = serialize(file);
 
 			const dataValue = JSON.parse(result.get(DEFAULT_REFERENCE_PREFIX.data) as string);
 			const storedFile = result.get(dataValue);
-			
+
 			expect(storedFile).toBeInstanceOf(File);
 			expect((storedFile as File).type).toBe("image/jpeg");
 		});
 
 		test("should preserve File lastModified attribute", () => {
 			const lastModified = Date.now();
-			const file = new File(
-				[faker.lorem.paragraph()],
-				faker.system.fileName(),
-				{ type: "text/plain", lastModified }
-			);
+			const file = new File([faker.lorem.paragraph()], faker.system.fileName(), {
+				type: "text/plain",
+				lastModified,
+			});
 
 			const result = serialize(file);
 
 			const dataValue = JSON.parse(result.get(DEFAULT_REFERENCE_PREFIX.data) as string);
 			const storedFile = result.get(dataValue);
-			
+
 			expect(storedFile).toBeInstanceOf(File);
 			expect((storedFile as File).lastModified).toBe(lastModified);
 		});
@@ -371,7 +367,7 @@ describe("serialize", () => {
 
 			const dataValue = JSON.parse(result.get(DEFAULT_REFERENCE_PREFIX.data) as string);
 			const storedFile = result.get(dataValue.attachment);
-			
+
 			expect(storedFile).toBeInstanceOf(File);
 			expect((storedFile as File).name).toBe(fileName);
 			expect((storedFile as File).type).toBe(fileType);
@@ -380,15 +376,21 @@ describe("serialize", () => {
 
 		test("should preserve File attributes in array of Files", () => {
 			const files = [
-				new File([faker.lorem.paragraph()], "file1.txt", { type: "text/plain", lastModified: 1000 }),
-				new File([faker.lorem.paragraph()], "file2.json", { type: "application/json", lastModified: 2000 }),
+				new File([faker.lorem.paragraph()], "file1.txt", {
+					type: "text/plain",
+					lastModified: 1000,
+				}),
+				new File([faker.lorem.paragraph()], "file2.json", {
+					type: "application/json",
+					lastModified: 2000,
+				}),
 				new File([faker.lorem.paragraph()], "file3.png", { type: "image/png", lastModified: 3000 }),
 			];
 
 			const result = serialize(files);
 
 			const dataValue = JSON.parse(result.get(DEFAULT_REFERENCE_PREFIX.data) as string);
-			
+
 			dataValue.forEach((ref: string, index: number) => {
 				const storedFile = result.get(ref);
 				expect(storedFile).toBeInstanceOf(File);
@@ -405,7 +407,7 @@ describe("serialize", () => {
 
 			const dataValue = JSON.parse(result.get(DEFAULT_REFERENCE_PREFIX.data) as string);
 			const storedFile = result.get(dataValue);
-			
+
 			expect(storedFile).toBeInstanceOf(File);
 			// Note: Empty file name may become undefined in some implementations
 			const name = (storedFile as File).name;
@@ -420,7 +422,7 @@ describe("serialize", () => {
 
 			const dataValue = JSON.parse(result.get(DEFAULT_REFERENCE_PREFIX.data) as string);
 			const storedFile = result.get(dataValue.upload);
-			
+
 			expect(storedFile).toBeInstanceOf(File);
 			expect((storedFile as File).name).toBe(fileName);
 		});
@@ -433,7 +435,7 @@ describe("serialize", () => {
 
 			const dataValue = JSON.parse(result.get(DEFAULT_REFERENCE_PREFIX.data) as string);
 			const storedFile = result.get(dataValue);
-			
+
 			expect(storedFile).toBeInstanceOf(File);
 			expect((storedFile as File).name).toBe(fileName);
 		});
@@ -446,7 +448,7 @@ describe("serialize", () => {
 
 			const dataValue = JSON.parse(result.get(DEFAULT_REFERENCE_PREFIX.data) as string);
 			const storedFile = result.get(dataValue);
-			
+
 			expect(storedFile).toBeInstanceOf(File);
 			expect((storedFile as File).name).toBe(fileName);
 		});
@@ -461,10 +463,10 @@ describe("serialize", () => {
 			const dataValue = JSON.parse(result.get(DEFAULT_REFERENCE_PREFIX.data) as string);
 			const storedFile = result.get(dataValue.file);
 			const storedBlob = result.get(dataValue.blob);
-			
+
 			expect(storedFile).toBeInstanceOf(File);
 			expect((storedFile as File).name).toBe("document.txt");
-			
+
 			expect(storedBlob).toBeInstanceOf(Blob);
 			// Blob doesn't have a name property
 			expect((storedBlob as any).name).toBeUndefined();
@@ -473,13 +475,13 @@ describe("serialize", () => {
 		test("should preserve File attributes in nested structure", () => {
 			const files = {
 				profile: {
-					avatar: new File([faker.lorem.paragraph()], "avatar.jpg", { 
+					avatar: new File([faker.lorem.paragraph()], "avatar.jpg", {
 						type: "image/jpeg",
-						lastModified: 1000 
+						lastModified: 1000,
 					}),
-					resume: new File([faker.lorem.paragraph()], "resume.pdf", { 
+					resume: new File([faker.lorem.paragraph()], "resume.pdf", {
 						type: "application/pdf",
-						lastModified: 2000 
+						lastModified: 2000,
 					}),
 				},
 			};
@@ -487,13 +489,13 @@ describe("serialize", () => {
 			const result = serialize(files);
 
 			const dataValue = JSON.parse(result.get(DEFAULT_REFERENCE_PREFIX.data) as string);
-			
+
 			const avatarFile = result.get(dataValue.profile.avatar);
 			expect(avatarFile).toBeInstanceOf(File);
 			expect((avatarFile as File).name).toBe("avatar.jpg");
 			expect((avatarFile as File).type).toBe("image/jpeg");
 			expect((avatarFile as File).lastModified).toBe(1000);
-			
+
 			const resumeFile = result.get(dataValue.profile.resume);
 			expect(resumeFile).toBeInstanceOf(File);
 			expect((resumeFile as File).name).toBe("resume.pdf");
@@ -523,7 +525,7 @@ describe("serialize", () => {
 
 		test("should serialize Blob with various MIME types", () => {
 			const types = ["application/json", "image/jpeg", "video/mp4", "application/pdf"];
-			const blobs = types.map(type => new Blob([faker.lorem.paragraph()], { type }));
+			const blobs = types.map((type) => new Blob([faker.lorem.paragraph()], { type }));
 
 			const result = serialize({ files: blobs });
 
@@ -1210,5 +1212,3 @@ describe("serialize", () => {
 		});
 	});
 });
-
-

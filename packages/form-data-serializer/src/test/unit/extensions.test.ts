@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, test } from "bun:test";
 import { faker } from "@faker-js/faker";
 import { deserialize, type SerializationExtension, serialize } from "@/serialize-refactor";
-import { BigIntExtension, DateExtension, ErrorExtension, SymbolExtension } from "@/extensions-refactor";
+import {
+	BigIntExtension,
+	DateExtension,
+	ErrorExtension,
+	SymbolExtension,
+} from "@/extensions-refactor";
 
 describe("Extensions - Edge Cases and Complex Scenarios", () => {
 	beforeEach(() => {
@@ -11,67 +16,61 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 	describe("DateExtension - Edge Cases", () => {
 		test("should handle Date at Unix epoch (1970-01-01)", () => {
 			const original = new Date(0);
-			const result = deserialize(
-				serialize(original, { extensions: [DateExtension] }),
-				{ extensions: [DateExtension] }
-			);
+			const result = deserialize(serialize(original, { extensions: [DateExtension] }), {
+				extensions: [DateExtension],
+			}) as Date;
 			expect(result).toBeInstanceOf(Date);
 			expect(result.getTime()).toBe(0);
 		});
 
 		test("should handle very old dates (year 1900)", () => {
 			const original = new Date("1900-01-01T00:00:00.000Z");
-			const result = deserialize(
-				serialize(original, { extensions: [DateExtension] }),
-				{ extensions: [DateExtension] }
-			);
+			const result = deserialize(serialize(original, { extensions: [DateExtension] }), {
+				extensions: [DateExtension],
+			}) as Date;
 			expect(result).toBeInstanceOf(Date);
 			expect(result.getTime()).toBe(original.getTime());
 		});
 
 		test("should handle far future dates (year 2500)", () => {
 			const original = new Date("2500-12-31T23:59:59.999Z");
-			const result = deserialize(
-				serialize(original, { extensions: [DateExtension] }),
-				{ extensions: [DateExtension] }
-			);
+			const result = deserialize(serialize(original, { extensions: [DateExtension] }), {
+				extensions: [DateExtension],
+			}) as Date;
 			expect(result).toBeInstanceOf(Date);
 			expect(result.getTime()).toBe(original.getTime());
 		});
 
 		test("should handle dates with millisecond precision", () => {
 			const original = new Date("2025-10-06T12:34:56.789Z");
-			const result = deserialize(
-				serialize(original, { extensions: [DateExtension] }),
-				{ extensions: [DateExtension] }
-			);
+			const result = deserialize(serialize(original, { extensions: [DateExtension] }), {
+				extensions: [DateExtension],
+			}) as Date;
 			expect(result).toBeInstanceOf(Date);
 			expect(result.getTime()).toBe(original.getTime());
 		});
 
 		test("should handle invalid Date objects", () => {
 			const original = new Date("invalid");
-			
+
 			// Invalid dates can't be serialized with toISOString(), so this should throw
 			expect(() => serialize(original, { extensions: [DateExtension] })).toThrow();
 		});
 
 		test("should handle Date with maximum safe timestamp", () => {
 			const original = new Date(8640000000000000); // Max date value
-			const result = deserialize(
-				serialize(original, { extensions: [DateExtension] }),
-				{ extensions: [DateExtension] }
-			);
+			const result = deserialize(serialize(original, { extensions: [DateExtension] }), {
+				extensions: [DateExtension],
+			}) as Date;
 			expect(result).toBeInstanceOf(Date);
 			expect(result.getTime()).toBe(original.getTime());
 		});
 
 		test("should handle Date with minimum safe timestamp", () => {
 			const original = new Date(-8640000000000000); // Min date value
-			const result = deserialize(
-				serialize(original, { extensions: [DateExtension] }),
-				{ extensions: [DateExtension] }
-			);
+			const result = deserialize(serialize(original, { extensions: [DateExtension] }), {
+				extensions: [DateExtension],
+			}) as Date;
 			expect(result).toBeInstanceOf(Date);
 			expect(result.getTime()).toBe(original.getTime());
 		});
@@ -82,10 +81,9 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 				new Date("2025-06-15T12:30:45.123Z"),
 				new Date("2025-12-31T23:59:59.999Z"),
 			];
-			const result = deserialize(
-				serialize(original, { extensions: [DateExtension] }),
-				{ extensions: [DateExtension] }
-			);
+			const result = deserialize(serialize(original, { extensions: [DateExtension] }), {
+				extensions: [DateExtension],
+			}) as Date[];
 
 			expect(result).toHaveLength(3);
 			result.forEach((date: Date, i: number) => {
@@ -102,18 +100,14 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 						date: new Date("2025-02-01"),
 						level3: {
 							date: new Date("2025-03-01"),
-							dates: [
-								new Date("2025-04-01"),
-								new Date("2025-05-01"),
-							],
+							dates: [new Date("2025-04-01"), new Date("2025-05-01")],
 						},
 					},
 				},
 			};
-			const result = deserialize(
-				serialize(original, { extensions: [DateExtension] }),
-				{ extensions: [DateExtension] }
-			);
+			const result = deserialize(serialize(original, { extensions: [DateExtension] }), {
+				extensions: [DateExtension],
+			}) as typeof original;
 
 			// Check types and verify structure
 			expect(result.level1.date).toBeInstanceOf(Date);
@@ -129,10 +123,9 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 				updatedAt: new Date("2025-02-01"),
 				deletedAt: null,
 			};
-			const result = deserialize(
-				serialize(original, { extensions: [DateExtension] }),
-				{ extensions: [DateExtension] }
-			);
+			const result = deserialize(serialize(original, { extensions: [DateExtension] }), {
+				extensions: [DateExtension],
+			}) as typeof original;
 
 			expect(result.createdAt).toBeInstanceOf(Date);
 			expect(result.updatedAt).toBeInstanceOf(Date);
@@ -143,46 +136,41 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 	describe("BigIntExtension - Edge Cases", () => {
 		test("should handle zero BigInt", () => {
 			const original = BigInt(0);
-			const result = deserialize(
-				serialize(original, { extensions: [BigIntExtension] }),
-				{ extensions: [BigIntExtension] }
-			);
+			const result = deserialize(serialize(original, { extensions: [BigIntExtension] }), {
+				extensions: [BigIntExtension],
+			});
 			expect(result).toBe(BigInt(0));
 		});
 
 		test("should handle negative BigInt", () => {
 			const original = BigInt("-9007199254740991999");
-			const result = deserialize(
-				serialize(original, { extensions: [BigIntExtension] }),
-				{ extensions: [BigIntExtension] }
-			);
+			const result = deserialize(serialize(original, { extensions: [BigIntExtension] }), {
+				extensions: [BigIntExtension],
+			});
 			expect(result).toBe(original);
 		});
 
 		test("should handle very large BigInt (beyond Number.MAX_SAFE_INTEGER)", () => {
 			const original = BigInt("999999999999999999999999999999");
-			const result = deserialize(
-				serialize(original, { extensions: [BigIntExtension] }),
-				{ extensions: [BigIntExtension] }
-			);
+			const result = deserialize(serialize(original, { extensions: [BigIntExtension] }), {
+				extensions: [BigIntExtension],
+			});
 			expect(result).toBe(original);
 		});
 
 		test("should handle BigInt one", () => {
 			const original = BigInt(1);
-			const result = deserialize(
-				serialize(original, { extensions: [BigIntExtension] }),
-				{ extensions: [BigIntExtension] }
-			);
+			const result = deserialize(serialize(original, { extensions: [BigIntExtension] }), {
+				extensions: [BigIntExtension],
+			});
 			expect(result).toBe(BigInt(1));
 		});
 
 		test("should handle BigInt negative one", () => {
 			const original = BigInt(-1);
-			const result = deserialize(
-				serialize(original, { extensions: [BigIntExtension] }),
-				{ extensions: [BigIntExtension] }
-			);
+			const result = deserialize(serialize(original, { extensions: [BigIntExtension] }), {
+				extensions: [BigIntExtension],
+			});
 			expect(result).toBe(BigInt(-1));
 		});
 
@@ -194,10 +182,9 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 				BigInt(1),
 				BigInt(-1),
 			];
-			const result = deserialize(
-				serialize(original, { extensions: [BigIntExtension] }),
-				{ extensions: [BigIntExtension] }
-			);
+			const result = deserialize(serialize(original, { extensions: [BigIntExtension] }), {
+				extensions: [BigIntExtension],
+			}) as bigint[];
 
 			expect(result).toHaveLength(5);
 			result.forEach((bigInt: bigint, i: number) => {
@@ -212,10 +199,9 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 				viewCount: BigInt(1000000000),
 				balance: BigInt("-5000"),
 			};
-			const result = deserialize(
-				serialize(original, { extensions: [BigIntExtension] }),
-				{ extensions: [BigIntExtension] }
-			);
+			const result = deserialize(serialize(original, { extensions: [BigIntExtension] }), {
+				extensions: [BigIntExtension],
+			}) as typeof original;
 
 			expect(result.userId).toBe(original.userId);
 			expect(result.sessionId).toBe(original.sessionId);
@@ -224,18 +210,13 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 		});
 
 		test("should handle BigInt in nested arrays", () => {
-			const original = [
-				[BigInt(1), BigInt(2)],
-				[BigInt(3), BigInt(4)],
-				[[BigInt(5), BigInt(6)]],
-			];
-			const result = deserialize(
-				serialize(original, { extensions: [BigIntExtension] }),
-				{ extensions: [BigIntExtension] }
-			);
+			const original = [[BigInt(1), BigInt(2)], [BigInt(3), BigInt(4)], [[BigInt(5), BigInt(6)]]];
+			const result = deserialize(serialize(original, { extensions: [BigIntExtension] }), {
+				extensions: [BigIntExtension],
+			}) as Array<bigint[] | bigint[][]>;
 
-			expect(result[0][0]).toBe(BigInt(1));
-			expect(result[2][0][1]).toBe(BigInt(6));
+			expect((result[0] as bigint[])[0]).toBe(BigInt(1));
+			expect((result[2] as bigint[][])[0][1]).toBe(BigInt(6));
 		});
 
 		test("should handle BigInt mixed with null values", () => {
@@ -244,10 +225,9 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 				previousId: null,
 				nextId: BigInt(456),
 			};
-			const result = deserialize(
-				serialize(original, { extensions: [BigIntExtension] }),
-				{ extensions: [BigIntExtension] }
-			);
+			const result = deserialize(serialize(original, { extensions: [BigIntExtension] }), {
+				extensions: [BigIntExtension],
+			}) as typeof original;
 
 			expect(result.id).toBe(BigInt(123));
 			expect(result.previousId).toBe(null);
@@ -258,10 +238,9 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 	describe("ErrorExtension - Edge Cases", () => {
 		test("should handle basic Error", () => {
 			const original = new Error("Something went wrong");
-			const result = deserialize(
-				serialize(original, { extensions: [ErrorExtension] }),
-				{ extensions: [ErrorExtension] }
-			);
+			const result = deserialize(serialize(original, { extensions: [ErrorExtension] }), {
+				extensions: [ErrorExtension],
+			}) as Error;
 
 			expect(result).toBeInstanceOf(Error);
 			expect(result.message).toBe("Something went wrong");
@@ -270,10 +249,9 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 
 		test("should handle Error with empty message", () => {
 			const original = new Error("");
-			const result = deserialize(
-				serialize(original, { extensions: [ErrorExtension] }),
-				{ extensions: [ErrorExtension] }
-			);
+			const result = deserialize(serialize(original, { extensions: [ErrorExtension] }), {
+				extensions: [ErrorExtension],
+			}) as Error;
 
 			expect(result).toBeInstanceOf(Error);
 			expect(result.message).toBe("");
@@ -281,10 +259,9 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 
 		test("should handle TypeError", () => {
 			const original = new TypeError("Invalid type");
-			const result = deserialize(
-				serialize(original, { extensions: [ErrorExtension] }),
-				{ extensions: [ErrorExtension] }
-			);
+			const result = deserialize(serialize(original, { extensions: [ErrorExtension] }), {
+				extensions: [ErrorExtension],
+			}) as Error;
 
 			expect(result).toBeInstanceOf(Error);
 			expect(result.message).toBe("Invalid type");
@@ -293,10 +270,9 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 
 		test("should handle RangeError", () => {
 			const original = new RangeError("Out of range");
-			const result = deserialize(
-				serialize(original, { extensions: [ErrorExtension] }),
-				{ extensions: [ErrorExtension] }
-			);
+			const result = deserialize(serialize(original, { extensions: [ErrorExtension] }), {
+				extensions: [ErrorExtension],
+			}) as Error;
 
 			expect(result).toBeInstanceOf(Error);
 			expect(result.message).toBe("Out of range");
@@ -306,7 +282,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 		test("should handle ReferenceError", () => {
 			const original = new ReferenceError("Variable not defined");
 			const serialized = serialize(original, { extensions: [ErrorExtension] });
-			const result = deserialize(serialized, { extensions: [ErrorExtension] });
+			const result = deserialize(serialized, { extensions: [ErrorExtension] }) as Error;
 
 			expect(result).toBeInstanceOf(Error);
 			expect(result.message).toBe("Variable not defined");
@@ -316,7 +292,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 		test("should handle Error with stack trace", () => {
 			const original = new Error("Test error");
 			const serialized = serialize(original, { extensions: [ErrorExtension] });
-			const result = deserialize(serialized, { extensions: [ErrorExtension] });
+			const result = deserialize(serialized, { extensions: [ErrorExtension] }) as Error;
 
 			expect(result).toBeInstanceOf(Error);
 			expect(result.message).toBe("Test error");
@@ -325,14 +301,10 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 		});
 
 		test("should handle array of different error types", () => {
-			const original = [
-				new Error("Error 1"),
-				new TypeError("Error 2"),
-				new RangeError("Error 3"),
-			];
+			const original = [new Error("Error 1"), new TypeError("Error 2"), new RangeError("Error 3")];
 
 			const serialized = serialize(original, { extensions: [ErrorExtension] });
-			const result = deserialize(serialized, { extensions: [ErrorExtension] });
+			const result = deserialize(serialized, { extensions: [ErrorExtension] }) as Error[];
 
 			expect(result).toHaveLength(3);
 			expect(result[0]).toBeInstanceOf(Error);
@@ -352,7 +324,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 			};
 
 			const serialized = serialize(original, { extensions: [ErrorExtension] });
-			const result = deserialize(serialized, { extensions: [ErrorExtension] });
+			const result = deserialize(serialized, { extensions: [ErrorExtension] }) as typeof original;
 
 			expect(result.status).toBe("failed");
 			expect(result.error).toBeInstanceOf(Error);
@@ -364,7 +336,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 		test("should handle Error with unicode characters in message", () => {
 			const original = new Error("操作失败 🚫 Échec de l'opération");
 			const serialized = serialize(original, { extensions: [ErrorExtension] });
-			const result = deserialize(serialized, { extensions: [ErrorExtension] });
+			const result = deserialize(serialized, { extensions: [ErrorExtension] }) as Error;
 
 			expect(result).toBeInstanceOf(Error);
 			expect(result.message).toBe("操作失败 🚫 Échec de l'opération");
@@ -374,7 +346,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 			const longMessage = faker.lorem.paragraphs(10);
 			const original = new Error(longMessage);
 			const serialized = serialize(original, { extensions: [ErrorExtension] });
-			const result = deserialize(serialized, { extensions: [ErrorExtension] });
+			const result = deserialize(serialized, { extensions: [ErrorExtension] }) as Error;
 
 			expect(result).toBeInstanceOf(Error);
 			expect(result.message).toBe(longMessage);
@@ -385,7 +357,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 		test("should handle Symbol with description", () => {
 			const original = Symbol("mySymbol");
 			const serialized = serialize(original, { extensions: [SymbolExtension] });
-			const result = deserialize(serialized, { extensions: [SymbolExtension] });
+			const result = deserialize(serialized, { extensions: [SymbolExtension] }) as symbol;
 
 			expect(typeof result).toBe("symbol");
 			expect(result.description).toBe("mySymbol");
@@ -394,7 +366,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 		test("should handle Symbol without description", () => {
 			const original = Symbol();
 			const serialized = serialize(original, { extensions: [SymbolExtension] });
-			const result = deserialize(serialized, { extensions: [SymbolExtension] });
+			const result = deserialize(serialized, { extensions: [SymbolExtension] }) as symbol;
 
 			expect(typeof result).toBe("symbol");
 			// Note: Symbol() creates a symbol with empty string description, not undefined
@@ -404,7 +376,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 		test("should handle Symbol with empty string description", () => {
 			const original = Symbol("");
 			const serialized = serialize(original, { extensions: [SymbolExtension] });
-			const result = deserialize(serialized, { extensions: [SymbolExtension] });
+			const result = deserialize(serialized, { extensions: [SymbolExtension] }) as symbol;
 
 			expect(typeof result).toBe("symbol");
 			expect(result.description).toBe("");
@@ -413,21 +385,17 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 		test("should handle Symbol with unicode description", () => {
 			const original = Symbol("🔑 密钥 clé");
 			const serialized = serialize(original, { extensions: [SymbolExtension] });
-			const result = deserialize(serialized, { extensions: [SymbolExtension] });
+			const result = deserialize(serialized, { extensions: [SymbolExtension] }) as symbol;
 
 			expect(typeof result).toBe("symbol");
 			expect(result.description).toBe("🔑 密钥 clé");
 		});
 
 		test("should handle array of Symbols", () => {
-			const original = [
-				Symbol("first"),
-				Symbol("second"),
-				Symbol("third"),
-			];
+			const original = [Symbol("first"), Symbol("second"), Symbol("third")];
 
 			const serialized = serialize(original, { extensions: [SymbolExtension] });
-			const result = deserialize(serialized, { extensions: [SymbolExtension] });
+			const result = deserialize(serialized, { extensions: [SymbolExtension] }) as symbol[];
 
 			expect(result).toHaveLength(3);
 			result.forEach((sym: symbol, i: number) => {
@@ -443,7 +411,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 			};
 
 			const serialized = serialize(original, { extensions: [SymbolExtension] });
-			const result = deserialize(serialized, { extensions: [SymbolExtension] });
+			const result = deserialize(serialized, { extensions: [SymbolExtension] }) as typeof original;
 
 			expect(typeof result.id).toBe("symbol");
 			expect(result.id.description).toBe("unique-id");
@@ -453,7 +421,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 		test("should create new Symbol instances (not preserve identity)", () => {
 			const original = Symbol("test");
 			const serialized = serialize(original, { extensions: [SymbolExtension] });
-			const result = deserialize(serialized, { extensions: [SymbolExtension] });
+			const result = deserialize(serialized, { extensions: [SymbolExtension] }) as symbol;
 
 			// Symbols are unique, so deserialized symbol won't be identical
 			expect(typeof result).toBe("symbol");
@@ -481,7 +449,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 			});
 			const result = deserialize(serialized, {
 				extensions: [DateExtension, BigIntExtension, ErrorExtension, SymbolExtension],
-			});
+			}) as typeof original;
 
 			expect(result.timestamp).toBeInstanceOf(Date);
 			expect(result.timestamp.getTime()).toBe(date.getTime());
@@ -503,14 +471,8 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 							error: new Error("Nested error"),
 							level4: {
 								symbol: Symbol("deep"),
-								dates: [
-									new Date("2025-02-01"),
-									new Date("2025-03-01"),
-								],
-								bigInts: [
-									BigInt(111),
-									BigInt(222),
-								],
+								dates: [new Date("2025-02-01"), new Date("2025-03-01")],
+								bigInts: [BigInt(111), BigInt(222)],
 							},
 						},
 					},
@@ -522,7 +484,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 			});
 			const result = deserialize(serialized, {
 				extensions: [DateExtension, BigIntExtension, ErrorExtension, SymbolExtension],
-			});
+			}) as typeof original;
 
 			expect(result.level1.date).toBeInstanceOf(Date);
 			expect(typeof result.level1.level2.bigInt).toBe("bigint");
@@ -547,7 +509,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 			});
 			const result = deserialize(serialized, {
 				extensions: [DateExtension, BigIntExtension, ErrorExtension, SymbolExtension],
-			});
+			}) as Array<Date | bigint | Error | symbol>;
 
 			expect(result[0]).toBeInstanceOf(Date);
 			expect(typeof result[1]).toBe("bigint");
@@ -570,7 +532,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 			});
 			const result = deserialize(serialized, {
 				extensions: [DateExtension, BigIntExtension],
-			});
+			}) as typeof original;
 
 			expect(result.file).toBeInstanceOf(Blob);
 			const text = await result.file.text();
@@ -594,7 +556,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 			});
 			const result = deserialize(serialized, {
 				extensions: [DateExtension, BigIntExtension, ErrorExtension],
-			});
+			}) as typeof original;
 
 			expect(result.date1).toBeInstanceOf(Date);
 			expect(result.date2).toBe(null);
@@ -616,7 +578,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 
 			const original = new Set([1, 2, 3, "hello", true]);
 			const serialized = serialize(original, { extensions: [SetExtension] });
-			const result = deserialize(serialized, { extensions: [SetExtension] });
+			const result = deserialize(serialized, { extensions: [SetExtension] }) as Set<unknown>;
 
 			expect(result).toBeInstanceOf(Set);
 			expect(result.size).toBe(5);
@@ -638,7 +600,10 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 				[3, true],
 			]);
 			const serialized = serialize(original, { extensions: [MapExtension] });
-			const result = deserialize(serialized, { extensions: [MapExtension] });
+			const result = deserialize(serialized, { extensions: [MapExtension] }) as Map<
+				unknown,
+				unknown
+			>;
 
 			expect(result).toBeInstanceOf(Map);
 			expect(result.size).toBe(3);
@@ -660,7 +625,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 
 			const original = /test\d+/gi;
 			const serialized = serialize(original, { extensions: [RegExpExtension] });
-			const result = deserialize(serialized, { extensions: [RegExpExtension] });
+			const result = deserialize(serialized, { extensions: [RegExpExtension] }) as RegExp;
 
 			expect(result).toBeInstanceOf(RegExp);
 			expect(result.source).toBe("test\\d+");
@@ -678,7 +643,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 
 			const original = new URL("https://example.com/path?query=value#hash");
 			const serialized = serialize(original, { extensions: [URLExtension] });
-			const result = deserialize(serialized, { extensions: [URLExtension] });
+			const result = deserialize(serialized, { extensions: [URLExtension] }) as URL;
 
 			expect(result).toBeInstanceOf(URL);
 			expect(result.href).toBe(original.href);
@@ -688,7 +653,10 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 
 		test("should handle custom Point class extension", () => {
 			class Point {
-				constructor(public x: number, public y: number) {}
+				constructor(
+					public x: number,
+					public y: number,
+				) {}
 			}
 
 			const PointExtension: SerializationExtension<Point> = {
@@ -703,7 +671,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 
 			const original = new Point(10, 20);
 			const serialized = serialize(original, { extensions: [PointExtension] });
-			const result = deserialize(serialized, { extensions: [PointExtension] });
+			const result = deserialize(serialized, { extensions: [PointExtension] }) as Point;
 
 			expect(result).toBeInstanceOf(Point);
 			expect(result.x).toBe(10);
@@ -727,7 +695,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 			};
 
 			const serialized = serialize(original, { extensions: [SetExtension] });
-			const result = deserialize(serialized, { extensions: [SetExtension] });
+			const result = deserialize(serialized, { extensions: [SetExtension] }) as typeof original;
 
 			expect(result.tags).toBeInstanceOf(Set);
 			expect(result.tags.size).toBe(3);
@@ -746,14 +714,10 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 				canHandle: (value): value is RegExp => value instanceof RegExp,
 			};
 
-			const original = [
-				/\d+/g,
-				/[a-z]+/i,
-				/test/,
-			];
+			const original = [/\d+/g, /[a-z]+/i, /test/];
 
 			const serialized = serialize(original, { extensions: [RegExpExtension] });
-			const result = deserialize(serialized, { extensions: [RegExpExtension] });
+			const result = deserialize(serialized, { extensions: [RegExpExtension] }) as RegExp[];
 
 			expect(result).toHaveLength(3);
 			result.forEach((regexp: RegExp) => {
@@ -768,7 +732,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 				constructor(
 					public id: number,
 					public data: { nested: string[] },
-					public metadata: Map<string, unknown>
+					public metadata: Map<string, unknown>,
 				) {}
 			}
 
@@ -782,11 +746,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 					}),
 				deserialize: (data) => {
 					const parsed = JSON.parse(data as string);
-					return new ComplexObject(
-						parsed.id,
-						parsed.data,
-						new Map(parsed.metadata)
-					);
+					return new ComplexObject(parsed.id, parsed.data, new Map(parsed.metadata));
 				},
 				canHandle: (value): value is ComplexObject => value instanceof ComplexObject,
 			};
@@ -794,11 +754,14 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 			const original = new ComplexObject(
 				123,
 				{ nested: ["a", "b", "c"] },
-				new Map<string, unknown>([["key1", "value1"], ["key2", 42]])
+				new Map<string, unknown>([
+					["key1", "value1"],
+					["key2", 42],
+				]),
 			);
 
 			const serialized = serialize(original, { extensions: [ComplexExtension] });
-			const result = deserialize(serialized, { extensions: [ComplexExtension] });
+			const result = deserialize(serialized, { extensions: [ComplexExtension] }) as ComplexObject;
 
 			expect(result).toBeInstanceOf(ComplexObject);
 			expect(result.id).toBe(123);
@@ -852,7 +815,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 
 			// Should throw on duplicate extension names
 			expect(() => serialize(original, { extensions: [Extension1, Extension2] })).toThrow(
-				"Duplicate extension name found: 'customDate'"
+				"Duplicate extension name found: 'customDate'",
 			);
 		});
 
@@ -862,19 +825,17 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 
 			// Deserialize without the extension - should throw
 			expect(() => deserialize(serialized, { extensions: [] })).toThrow(
-				"Extension 'date' not found in provided extensions"
+				"Extension 'date' not found in provided extensions",
 			);
 		});
 	});
 
 	describe("Performance and Stress Tests", () => {
 		test("should handle very large array of dates", () => {
-			const original = Array.from({ length: 1000 }, (_, i) =>
-				new Date(Date.now() + i * 1000)
-			);
+			const original = Array.from({ length: 1000 }, (_, i) => new Date(Date.now() + i * 1000));
 
 			const serialized = serialize(original, { extensions: [DateExtension] });
-			const result = deserialize(serialized, { extensions: [DateExtension] });
+			const result = deserialize(serialized, { extensions: [DateExtension] }) as Date[];
 
 			expect(result).toHaveLength(1000);
 			result.forEach((date: Date, i: number) => {
@@ -887,7 +848,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 			const original = Array.from({ length: 1000 }, (_, i) => BigInt(i));
 
 			const serialized = serialize(original, { extensions: [BigIntExtension] });
-			const result = deserialize(serialized, { extensions: [BigIntExtension] });
+			const result = deserialize(serialized, { extensions: [BigIntExtension] }) as bigint[];
 
 			expect(result).toHaveLength(1000);
 			result.forEach((bigInt: bigint, i: number) => {
@@ -903,7 +864,7 @@ describe("Extensions - Edge Cases and Complex Scenarios", () => {
 			}
 
 			const serialized = serialize(original, { extensions: [DateExtension] });
-			const result = deserialize(serialized, { extensions: [DateExtension] });
+			const result = deserialize(serialized, { extensions: [DateExtension] }) as any;
 
 			// Navigate to the deepest level
 			let current = result;

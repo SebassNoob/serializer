@@ -1,10 +1,5 @@
 import { v7 as randomUUID } from "uuid";
-import type {
-	ExtractExtensionTypes,
-	Serializable,
-	SerializationExtension,
-	SerializeConfig,
-} from "./types";
+import type { Serializable, SerializeConfig } from "./types";
 import { _validateExtensions } from "./utils";
 import { BlobExtension } from "@/extensions-refactor/blob";
 import { DEFAULT_REFERENCE_PREFIX } from "./constants";
@@ -17,20 +12,51 @@ import { DEFAULT_REFERENCE_PREFIX } from "./constants";
  * The function recursively traverses the object structure, replacing any Blob instances and extension-handled
  * values with unique reference keys. The actual Blob data and extension data are stored separately in the
  * FormData under these reference keys, while the main object structure (with references) is stored under
- * the "$data" key as JSON.
+ * a configurable data key (default: "$data") as JSON.
  *
- * @typeParam T - Array type of serialization extensions
+ * The refactored serialize function treats all non-primitive types uniformly as extensions,
+ * including Blobs and Files which are handled by the built-in BlobExtension.
+ *
+ * **Type Safety with Extensions:**
+ *
+ * The function accepts `unknown` to allow serializing objects with extension-handled types (like `Date`, `bigint`, etc.).
+ * TypeScript cannot statically validate that extensions are provided for custom types, so type checking
+ * happens at runtime through the extension's `canHandle` method.
+ *
+ * When using extensions, you may need to use type assertions:
+ * ```typescript
+ * // ✓ With type assertion when using extensions
+ * const data = { date: new Date() } as const;
+ * serialize(data, { extensions: [DateExtension] });
+ *
+ * // ✓ Or explicitly type as unknown
+ * const data: unknown = { bigint: 123n };
+ * serialize(data, { extensions: [BigIntExtension] });
+ * ```
+ *
  * @param obj - The object to serialize. Can contain JSON primitives
- *   (string, number, boolean, null), Blobs, arrays, nested objects, and values handled by extensions.
- * @param config - Configuration object containing an array of serialization extensions that define how to handle custom types.
- *   Defaults to an empty array.
+ *   (string, number, boolean, null), Blobs, Files, arrays, nested objects, and values handled by extensions.
+ *   Cannot be `undefined`.
+ * @param config - Optional configuration object with the following properties:
+ *   - `extensions`: Array of SerializationExtension objects that define how to handle custom types.
+ *     The BlobExtension is automatically included by default. Defaults to an empty array.
+ *   - `referencePrefix`: Optional object to customize reference key prefixes:
+ *     - `data`: The key for the main data structure (default: "$data")
+ *     - `extension`: The prefix for extension references (default: "$ext")
+ *   - `generateDataId`: Optional custom function to generate IDs for extension data.
+ *     Receives the serialized value and should return a unique string identifier.
+ *     Defaults to UUID v7 generation.
  * @returns A FormData object containing:
- *   - "$data": JSON string of the main object structure with Blob/extension references
- *   - "$ext:name:uuid": Individual Blob or extension data referenced in the main structure
+ *   - A data key (default: "$data"): JSON string of the main object structure with extension references
+ *   - Extension data entries: "$ext:\_extension-name\_:\_uuid\_" for each extension-handled value
+ *   - For Blobs/Files: "$ext:blob:\_uuid\_" containing the actual Blob/File objects
+ *   - For other extensions: "$ext:\_extension-name\_:\_uuid\_" containing JSON strings
  *
- * @throws {@link Error} Throws an error if the input object is undefined
+ * @throws {@link Error} Throws an error if:
+ *   - The input object is `undefined`
+ *   - Extensions array contains invalid extension definitions
  *
- * @example Basic serialization without extensions
+ * @example Basic serialization without custom extensions
  * ```typescript
  * const data = {
  *   name: "John",
@@ -51,13 +77,13 @@ import { DEFAULT_REFERENCE_PREFIX } from "./constants";
  * // - "$ext:blob:01234567-89ab-cdef-0123-456789abcdef": [Blob object with image data]
  * ```
  *
- * @example With extensions for custom types (Date extension)
+ * @example With custom extensions (Date extension)
  * ```typescript
  * const dateExtension = {
  *   name: "date",
- *   canHandle: (value) => value instanceof Date,
+ *   canHandle: (value): value is Date => value instanceof Date,
  *   serialize: (date) => date.toISOString(),
- *   deserialize: (str) => new Date(str)
+ *   deserialize: (str) => new Date(str as string)
  * };
  *
  * const data = {
@@ -87,9 +113,77 @@ import { DEFAULT_REFERENCE_PREFIX } from "./constants";
  * // and the serialized ISO string is stored separately in the FormData under
  * // the corresponding extension key.
  * ```
+ *
+ * @example With custom reference prefixes
+ * ```typescript
+ * const customConfig = {
+ *   referencePrefix: {
+ *     data: "main",
+ *     extension: "@ref"
+ *   },
+ *   extensions: []
+ * };
+ *
+ * const data = {
+ *   name: "Alice",
+ *   file: new Blob(["content"], { type: "text/plain" })
+ * };
+ *
+ * const formData = serialize(data, customConfig);
+ *
+ * // The FormData will contain:
+ * // - "main": '{"name":"Alice","file":"@ref:blob:abc123..."}'
+ * // - "@ref:blob:abc123...": [Blob object]
+ *
+ * // Uses "main" instead of "$data" and "@ref:" instead of "$ext:"
+ * ```
+ *
+ * @example Handling File objects (subclass of Blob)
+ * ```typescript
+ * const data = {
+ *   document: new File(["content"], "document.pdf", { type: "application/pdf" }),
+ *   metadata: {
+ *     size: 1024,
+ *     uploaded: new Date()
+ *   }
+ * };
+ *
+ * const formData = serialize(data);
+ *
+ * // The FormData will contain:
+ * // - "$data": '{"document":"$ext:blob:file123...","metadata":{"size":1024,"uploaded":"$ext:blob:date456..."}}'
+ * // - "$ext:blob:file123...": [File object: "document.pdf"]
+ *
+ * // File objects are automatically handled by the BlobExtension
+ * // since File extends Blob
+ * ```
+ *
+ * @example With custom ID generation
+ * ```typescript
+ * let counter = 0;
+ * const customConfig = {
+ *   generateDataId: () => `custom-${counter++}`,
+ *   extensions: []
+ * };
+ *
+ * const data = {
+ *   files: [
+ *     new Blob(["first"]),
+ *     new Blob(["second"])
+ *   ]
+ * };
+ *
+ * const formData = serialize(data, customConfig);
+ *
+ * // The FormData will contain:
+ * // - "$data": '{"files":["$ext:blob:custom-0","$ext:blob:custom-1"]}'
+ * // - "$ext:blob:custom-0": [First Blob]
+ * // - "$ext:blob:custom-1": [Second Blob]
+ *
+ * // Uses custom ID generation instead of UUIDs
+ * ```
  */
-// biome-ignore lint/suspicious/noExplicitAny: unavoidable due to dynamic nature of extensions
-export function serialize<T = unknown>(obj: T, config?: SerializeConfig): FormData {
+export function serialize(obj: unknown, config?: SerializeConfig): FormData {
 	// Validate input
 	if (obj === undefined) {
 		throw new Error("Cannot serialize undefined value");
@@ -105,39 +199,44 @@ export function serialize<T = unknown>(obj: T, config?: SerializeConfig): FormDa
 
 	const formData = new FormData();
 
-	// create a map to store all the holes (eg. $ref:file:_uuid_ -> Blob object)
-	const holes = new Map<string, Serializable<Blob>>();
-	function replaceWithHole(extName: string, item: Serializable<Blob>) {
+	// create a map to store all the holes (eg. $ext:blob:_uuid_ -> Blob object)
+	const holes = new Map<string, string | Blob>();
+
+	function replaceWithHole(extName: string, item: string | Blob): string {
 		// Generate a unique ID for the object and store it in the holes object
 		const id = config?.generateDataId ? config.generateDataId(item) : randomUUID();
-		holes.set(GET_HOLE_KEY(extName, id), item);
-		return GET_HOLE_KEY(extName, id);
+		const key = GET_HOLE_KEY(extName, id);
+		holes.set(key, item);
+		return key;
 	}
 
 	// Recursively traverse the object and replace Blobs and extension-handled values with holes
-	function recursivelyHandle(data: unknown): Serializable | undefined {
+	function recursivelyHandle(data: unknown): unknown {
 		if (data === undefined || data === null) return data;
 
 		// Check if any extension can handle this value
 		for (const extension of extensions) {
 			if (extension.canHandle(data)) {
+				// TypeScript limitation: canHandle narrows the type, but we can't express
+				// the correlation between the type guard and the generic parameter across
+				// the array iteration. The cast is safe because canHandle guarantees the type.
 				const serialized = extension.serialize(data as any);
 				return replaceWithHole(extension.name, serialized);
 			}
 		}
 
-		if (Array.isArray(data)) return data.map(recursivelyHandle) as Serializable[];
-		if (typeof data === "object" && data.constructor === Object)
-			return Object.entries(data).reduce(
-				(acc, [key, value]) => {
-					acc[key] = recursivelyHandle(value as Serializable)!;
-					return acc;
-				},
-				{} as Record<string, Serializable>,
-			);
+		if (Array.isArray(data)) return data.map(recursivelyHandle);
+
+		if (typeof data === "object" && data.constructor === Object) {
+			const result: Record<string, unknown> = {};
+			for (const [key, value] of Object.entries(data)) {
+				result[key] = recursivelyHandle(value);
+			}
+			return result;
+		}
 
 		// If no extension handles it, it should be a primitive value
-		return data as Serializable;
+		return data;
 	}
 
 	const result = recursivelyHandle(obj);
